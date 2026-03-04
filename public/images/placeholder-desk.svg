@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#ddd5c4"/>
+  <rect x="200" y="250" width="400" height="18" rx="3" fill="#8b5e3c"/>
+  <rect x="220" y="268" width="50" height="160" rx="3" fill="#6b4629"/>
+  <rect x="530" y="268" width="50" height="160" rx="3" fill="#6b4629"/>
+  <rect x="490" y="300" width="90" height="60" rx="3" fill="#c49a72" stroke="#8b5e3c" stroke-width="1.5"/>
+  <text x="400" y="180" font-family="Georgia, serif" font-size="22" fill="#6b5c52" text-anchor="middle">Cherry Writing Desk</text>
+  <text x="400" y="208" font-family="Georgia, serif" font-size="14" fill="#8b7766" text-anchor="middle">Photo coming soon</text>
+</svg>

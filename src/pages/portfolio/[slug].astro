@@ -1,0 +1,273 @@
+---
+import type { ImageMetadata } from 'astro';
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const imageModules = import.meta.glob<{ default: ImageMetadata }>(
+  '/src/assets/images/**/*.{jpg,jpeg,png,webp,avif,gif}',
+  { eager: true }
+);
+
+function getProjectImages(slug: string): ImageMetadata[] {
+  return Object.entries(imageModules)
+    .filter(([path]) => path.startsWith(`/src/assets/images/${slug}/`))
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([, mod]) => mod.default);
+}
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects');
+  return projects.map((project) => ({
+    params: { slug: project.slug },
+    props:  { project },
+  }));
+}
+
+const { project } = Astro.props;
+const { Content } = await project.render();
+
+const projectImages = getProjectImages(project.slug);
+const coverImage = projectImages[0] ?? null;
+
+const dateStr = project.data.date.toLocaleDateString('en-US', {
+  year: 'numeric', month: 'long', day: 'numeric',
+});
+---
+
+<BaseLayout
+  title={project.data.title}
+  description={project.data.description}
+  ogImage={coverImage?.src}
+>
+  <article class="project-detail">
+
+    <!-- Hero image (only shown when a photo exists) -->
+    {coverImage && (
+      <div class="detail-hero">
+        <img
+          src={coverImage.src}
+          alt={project.data.coverAlt ?? project.data.title}
+          class="detail-hero-img"
+          loading="eager"
+          decoding="async"
+        />
+      </div>
+    )}
+
+    <div class="container detail-body">
+
+      <!-- Back link -->
+      <a href="/portfolio" class="back-link">&larr; All projects</a>
+
+      <div class="detail-layout">
+
+        <!-- Main content -->
+        <div class="detail-main">
+          <span class="section-label">{project.data.category}</span>
+          <h1>{project.data.title}</h1>
+          <p class="detail-lead">{project.data.description}</p>
+          <div class="divider"></div>
+          <div class="prose">
+            <Content />
+          </div>
+        </div>
+
+        <!-- Sidebar specs -->
+        <aside class="detail-sidebar">
+          <div class="spec-card">
+            <h2 class="spec-heading">Project Details</h2>
+            <dl class="spec-list">
+              <div class="spec-row">
+                <dt>Date completed</dt>
+                <dd>{dateStr}</dd>
+              </div>
+              {project.data.dimensions && (
+                <div class="spec-row">
+                  <dt>Dimensions</dt>
+                  <dd>{project.data.dimensions}</dd>
+                </div>
+              )}
+              {project.data.duration && (
+                <div class="spec-row">
+                  <dt>Build time</dt>
+                  <dd>{project.data.duration}</dd>
+                </div>
+              )}
+              {project.data.materials && project.data.materials.length > 0 && (
+                <div class="spec-row">
+                  <dt>Materials</dt>
+                  <dd>
+                    <ul class="materials-list">
+                      {project.data.materials.map((m) => <li>{m}</li>)}
+                    </ul>
+                  </dd>
+                </div>
+              )}
+            </dl>
+            <a href="/contact" class="btn btn-primary" style="width:100%; justify-content:center; margin-top: var(--space-6);">
+              Inquire about this piece
+            </a>
+          </div>
+        </aside>
+
+      </div>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+/* Hero */
+.detail-hero {
+  width: 100%;
+  max-height: 60vh;
+  overflow: hidden;
+  background: var(--color-surface);
+}
+
+.detail-hero-img {
+  width: 100%;
+  height: 100%;
+  max-height: 60vh;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Body */
+.detail-body {
+  padding-block: var(--space-12);
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  margin-block-end: var(--space-8);
+  transition: color var(--transition-fast);
+}
+
+.back-link:hover { color: var(--color-wood); }
+
+/* Two-column layout */
+.detail-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-12);
+}
+
+@media (min-width: 900px) {
+  .detail-layout {
+    grid-template-columns: 1fr 320px;
+    align-items: start;
+  }
+}
+
+/* Main */
+.detail-lead {
+  font-size: var(--text-lg);
+  color: var(--color-text-muted);
+  line-height: var(--leading-snug);
+  max-width: 60ch;
+  margin-block-end: 0;
+}
+
+/* Prose (rendered markdown) */
+.prose {
+  color: var(--color-text);
+  line-height: var(--leading-normal);
+}
+
+.prose :global(h2) {
+  font-size: var(--text-2xl);
+  margin-block: var(--space-8) var(--space-4);
+  color: var(--color-charcoal);
+}
+
+.prose :global(h3) {
+  font-size: var(--text-xl);
+  margin-block: var(--space-6) var(--space-3);
+}
+
+.prose :global(p) {
+  margin-block-end: var(--space-5);
+  max-width: var(--max-width-prose);
+}
+
+.prose :global(ul), .prose :global(ol) {
+  padding-left: var(--space-6);
+  margin-block-end: var(--space-5);
+}
+
+.prose :global(li) {
+  margin-block-end: var(--space-2);
+}
+
+.prose :global(blockquote) {
+  border-left: 4px solid var(--color-wood);
+  padding-left: var(--space-6);
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin-block: var(--space-6);
+}
+
+/* Sidebar spec card */
+.spec-card {
+  background: var(--color-warm-white);
+  border: 1px solid var(--color-border-dark);
+  border-radius: var(--radius-md);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: calc(var(--header-height) + var(--space-6));
+}
+
+.spec-heading {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  margin-block-end: var(--space-5);
+  padding-block-end: var(--space-4);
+  border-bottom: 1px solid var(--color-border-dark);
+}
+
+.spec-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.spec-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.spec-row dt {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.spec-row dd {
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.materials-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.materials-list li::before {
+  content: '— ';
+  color: var(--color-wood);
+}
+</style>

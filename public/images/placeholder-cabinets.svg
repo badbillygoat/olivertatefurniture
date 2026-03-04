@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#ddd5c4"/>
+  <rect x="100" y="150" width="180" height="300" rx="4" fill="#c9bfb0" stroke="#8b7766" stroke-width="2"/>
+  <rect x="290" y="150" width="180" height="300" rx="4" fill="#c9bfb0" stroke="#8b7766" stroke-width="2"/>
+  <rect x="480" y="150" width="180" height="300" rx="4" fill="#c9bfb0" stroke="#8b7766" stroke-width="2"/>
+  <circle cx="190" cy="305" r="6" fill="#8b5e3c"/>
+  <circle cx="380" cy="305" r="6" fill="#8b5e3c"/>
+  <circle cx="570" cy="305" r="6" fill="#8b5e3c"/>
+  <text x="400" y="100" font-family="Georgia, serif" font-size="22" fill="#6b5c52" text-anchor="middle">Shaker Kitchen Cabinets</text>
+  <text x="400" y="128" font-family="Georgia, serif" font-size="14" fill="#8b7766" text-anchor="middle">Photo coming soon</text>
+</svg>

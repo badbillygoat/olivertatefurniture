@@ -1,0 +1,374 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Contact"
+  description="Start a conversation about a custom woodworking commission — furniture, cabinetry, or a one-of-a-kind piece."
+>
+
+  <section class="contact-hero section">
+    <div class="container">
+      <span class="section-label">Get in touch</span>
+      <h1 class="section-heading">Contact</h1>
+      <p class="hero-desc">
+        I take on a small number of commissions each year. Tell me what you have
+        in mind — I'll reply within a few business days.
+      </p>
+      <div class="divider"></div>
+    </div>
+  </section>
+
+  <section class="contact-body section">
+    <div class="container contact-layout">
+
+      <!-- Form -->
+      <div class="form-wrap">
+        <form
+          id="contact-form"
+          class="contact-form"
+          novalidate
+          action="#"
+          method="POST"
+        >
+          <div class="field-row">
+            <div class="field">
+              <label for="name">Your name <span aria-hidden="true">*</span></label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                autocomplete="name"
+                required
+                aria-required="true"
+                placeholder="Jane Smith"
+              />
+              <span class="field-error" id="name-error" role="alert"></span>
+            </div>
+            <div class="field">
+              <label for="email">Email address <span aria-hidden="true">*</span></label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                autocomplete="email"
+                required
+                aria-required="true"
+                placeholder="jane@example.com"
+              />
+              <span class="field-error" id="email-error" role="alert"></span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="project-type">Type of project inquiry</label>
+            <select id="project-type" name="project-type">
+              <option value="">Select one (optional)</option>
+              <option value="tables">Dining or coffee table</option>
+              <option value="seating">Chair or bench</option>
+              <option value="desk">Desk or writing table</option>
+              <option value="storage">Shelving or console</option>
+              <option value="decor">Decorative / sculptural piece</option>
+              <option value="other">Other / not sure yet</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="budget">Approximate budget</label>
+            <select id="budget" name="budget">
+              <option value="">Select one (optional)</option>
+              <option value="2k-5k">$2,000 – $5,000</option>
+              <option value="5k-10k">$5,000 – $10,000</option>
+              <option value="10k-plus">$10,000+</option>
+              <option value="unsure">Not sure yet</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="message">Tell me about the piece you have in mind <span aria-hidden="true">*</span></label>
+            <textarea
+              id="message"
+              name="message"
+              rows="6"
+              required
+              aria-required="true"
+              placeholder="Describe what you have in mind — dimensions, wood species, timeline, how you plan to use it, any reference photos…"
+            ></textarea>
+            <span class="field-error" id="message-error" role="alert"></span>
+          </div>
+
+          <div class="form-footer">
+            <p class="form-note">
+              * Required fields. I'll reply within 2–3 business days.
+            </p>
+            <button type="submit" class="btn btn-primary">Send message</button>
+          </div>
+
+          <div id="form-success" class="form-success" hidden>
+            <strong>Message sent!</strong> Thank you — I'll be in touch soon.
+          </div>
+          <div id="form-error-msg" class="form-error-msg" hidden>
+            Something went wrong. Please email me directly instead.
+          </div>
+        </form>
+      </div>
+
+      <!-- Sidebar info -->
+      <aside class="contact-info">
+        <div class="info-card">
+          <h2>Before you reach out</h2>
+          <ul class="info-list">
+            <li>
+              <strong>Lead time</strong>
+              <span>Currently booking 8–16 weeks out. Reach out early.</span>
+            </li>
+            <li>
+              <strong>Minimum commission</strong>
+              <span>I generally don't take projects under $2,000.</span>
+            </li>
+            <li>
+              <strong>Delivery area</strong>
+              <span>I deliver within the greater Cleveland area. Pieces can also be arranged for pickup from the shop.</span>
+            </li>
+            <li>
+              <strong>Payment</strong>
+              <span>50% deposit to begin, 50% on completion. Check, bank transfer, or Venmo.</span>
+            </li>
+          </ul>
+        </div>
+      </aside>
+
+    </div>
+  </section>
+
+</BaseLayout>
+
+<style>
+.hero-desc {
+  font-size: var(--text-lg);
+  color: var(--color-text-muted);
+  max-width: 52ch;
+}
+
+/* Layout */
+.contact-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-12);
+  align-items: start;
+  padding-block-end: var(--space-16);
+}
+
+@media (min-width: 900px) {
+  .contact-layout { grid-template-columns: 1fr 320px; }
+}
+
+/* Form */
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+}
+
+@media (min-width: 480px) {
+  .field-row { grid-template-columns: 1fr 1fr; }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+label span { color: var(--color-wood); }
+
+input, select, textarea {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-base);
+  font-family: var(--font-sans);
+  color: var(--color-text);
+  background-color: var(--color-warm-white);
+  border: 1.5px solid var(--color-border-dark);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--color-wood);
+  box-shadow: 0 0 0 3px rgba(139, 94, 60, 0.15);
+}
+
+input[aria-invalid='true'], textarea[aria-invalid='true'] {
+  border-color: #c0392b;
+}
+
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b5c52' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--space-4) center;
+  padding-right: var(--space-10);
+}
+
+textarea { resize: vertical; min-height: 140px; }
+
+.field-error {
+  font-size: var(--text-xs);
+  color: #c0392b;
+  min-height: 1em;
+}
+
+.form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.form-note {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin: 0;
+  max-width: none;
+}
+
+.form-success {
+  padding: var(--space-4) var(--space-5);
+  background-color: #f0f7ee;
+  border: 1px solid #6aaa5e;
+  border-radius: var(--radius-sm);
+  color: #2d6a27;
+  font-size: var(--text-sm);
+}
+
+.form-error-msg {
+  padding: var(--space-4) var(--space-5);
+  background-color: #fdf0ee;
+  border: 1px solid #c0392b;
+  border-radius: var(--radius-sm);
+  color: #c0392b;
+  font-size: var(--text-sm);
+}
+
+/* Sidebar */
+.info-card {
+  background: var(--color-warm-white);
+  border: 1px solid var(--color-border-dark);
+  border-radius: var(--radius-md);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: calc(var(--header-height) + var(--space-6));
+}
+
+.info-card h2 {
+  font-size: var(--text-xl);
+  margin-block-end: var(--space-5);
+  padding-block-end: var(--space-4);
+  border-bottom: 1px solid var(--color-border-dark);
+}
+
+.info-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.info-list li {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.info-list strong {
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-wood);
+}
+
+.info-list span {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  line-height: var(--leading-normal);
+}
+</style>
+
+<script>
+const form = document.getElementById('contact-form') as HTMLFormElement | null;
+const successMsg = document.getElementById('form-success') as HTMLElement | null;
+const errorMsg   = document.getElementById('form-error-msg') as HTMLElement | null;
+
+function showError(inputId: string, errorId: string, message: string) {
+  const input = document.getElementById(inputId) as HTMLInputElement | null;
+  const error = document.getElementById(errorId) as HTMLElement | null;
+  if (input)  input.setAttribute('aria-invalid', 'true');
+  if (error)  error.textContent = message;
+}
+
+function clearError(inputId: string, errorId: string) {
+  const input = document.getElementById(inputId) as HTMLInputElement | null;
+  const error = document.getElementById(errorId) as HTMLElement | null;
+  if (input)  input.removeAttribute('aria-invalid');
+  if (error)  error.textContent = '';
+}
+
+form?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  // Clear previous errors
+  clearError('name', 'name-error');
+  clearError('email', 'email-error');
+  clearError('message', 'message-error');
+
+  const data = new FormData(form);
+  let valid = true;
+
+  if (!data.get('name')?.toString().trim()) {
+    showError('name', 'name-error', 'Please enter your name.');
+    valid = false;
+  }
+
+  const emailVal = data.get('email')?.toString().trim() ?? '';
+  if (!emailVal || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+    showError('email', 'email-error', 'Please enter a valid email address.');
+    valid = false;
+  }
+
+  if (!data.get('message')?.toString().trim()) {
+    showError('message', 'message-error', 'Please describe your project.');
+    valid = false;
+  }
+
+  if (!valid) return;
+
+  // When a form backend (Netlify, Formspree, etc.) is wired up,
+  // replace this block with the actual fetch call.
+  // For now, show a friendly message so development looks complete.
+  try {
+    // TODO: wire up real form submission, e.g.:
+    // await fetch('/api/contact', { method: 'POST', body: data });
+    if (successMsg) successMsg.hidden = false;
+    form.reset();
+  } catch {
+    if (errorMsg) errorMsg.hidden = false;
+  }
+});
+</script>

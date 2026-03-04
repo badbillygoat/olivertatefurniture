@@ -1,0 +1,304 @@
+---
+interface Props {
+  /** When true: fixed + transparent, overlays a fullscreen hero */
+  transparent?: boolean;
+}
+
+const { transparent = false } = Astro.props;
+
+const navLinks = [
+  { href: '/portfolio', label: 'Portfolio' },
+  { href: '/about',     label: 'About'     },
+  { href: '/contact',   label: 'Contact'   },
+];
+
+const currentPath = Astro.url.pathname.replace(/\/$/, '') || '/';
+---
+
+<header
+  class:list={['site-header', { 'is-transparent': transparent }]}
+  role="banner"
+  id="site-header"
+>
+  <div class="container header-inner">
+
+    <!-- Logo — hidden on the hero page (hero wordmark replaces it) -->
+    <a href="/" class="logo" aria-label="Oliver Tate Furniture — Home">
+      Oliver Tate Furniture
+    </a>
+
+    <!-- Desktop nav -->
+    <nav class="nav-desktop" aria-label="Primary navigation">
+      <ul role="list">
+        {navLinks.map(({ href, label }) => {
+          const isActive = currentPath.startsWith(href);
+          return (
+            <li>
+              <a href={href} aria-current={isActive ? 'page' : undefined}>
+                {label}
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+
+    <!-- Mobile hamburger -->
+    <button
+      class="hamburger"
+      aria-label="Open navigation menu"
+      aria-expanded="false"
+      aria-controls="mobile-menu"
+    >
+      <span></span><span></span><span></span>
+    </button>
+
+  </div>
+
+  <!-- Mobile drawer -->
+  <nav id="mobile-menu" class="nav-mobile" aria-label="Mobile navigation" hidden>
+    <ul role="list">
+      {navLinks.map(({ href, label }) => {
+        const isActive = currentPath.startsWith(href);
+        return (
+          <li>
+            <a href={href} aria-current={isActive ? 'page' : undefined}>
+              {label}
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  </nav>
+</header>
+
+<style>
+/* ---- Base header ---- */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
+  background-color: var(--color-bg);
+  border-bottom: 1px solid var(--color-accent);
+  transition: background-color var(--transition-base),
+              border-color var(--transition-base);
+}
+
+/* ---- Transparent / hero overlay mode ---- */
+.site-header.is-transparent {
+  position: fixed;
+  width: 100%;
+  background-color: transparent;
+  border-bottom: 1px solid transparent;
+}
+
+/* Logo is invisible in transparent mode — hero content IS the wordmark */
+.site-header.is-transparent .logo {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-base);
+}
+
+/* After scrolling: JS adds .is-scrolled → solid header + logo appears */
+.site-header.is-transparent.is-scrolled {
+  background-color: var(--color-bg);
+  border-bottom-color: var(--color-accent);
+}
+
+.site-header.is-transparent.is-scrolled .logo {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Nav links are light on transparent header (hero has dark bg/images) */
+.site-header.is-transparent:not(.is-scrolled) .nav-desktop a {
+  color: var(--color-bg);
+}
+.site-header.is-transparent:not(.is-scrolled) .nav-desktop a::after {
+  background-color: var(--color-bg);
+}
+.site-header.is-transparent:not(.is-scrolled) .hamburger span {
+  background-color: var(--color-bg);
+}
+
+/* ---- Layout ---- */
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6);
+  height: 100%;
+}
+
+/* ---- Logo ---- */
+.logo {
+  font-family: var(--font-logo);
+  font-size: 1.65rem;
+  color: var(--color-accent);
+  text-decoration: none;
+  line-height: 1;
+  white-space: nowrap;
+  transition: opacity var(--transition-base);
+}
+
+.logo:hover { opacity: 0.6; }
+
+/* ---- Desktop nav ---- */
+.nav-desktop ul {
+  display: flex;
+  list-style: none;
+  gap: var(--space-8);
+}
+
+.nav-desktop a {
+  position: relative;
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--color-accent);
+  padding-block-end: var(--space-1);
+  transition: color var(--transition-base), opacity var(--transition-fast);
+}
+
+/* Animated underline on hover / active */
+.nav-desktop a::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background-color: currentColor;
+  transition: width var(--transition-base);
+}
+
+.nav-desktop a:hover::after,
+.nav-desktop a[aria-current='page']::after {
+  width: 100%;
+}
+
+.nav-desktop a:hover { opacity: 1; }
+.nav-desktop a[aria-current='page'] { opacity: 1; }
+
+/* ---- Hamburger ---- */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--space-2);
+}
+
+.hamburger span {
+  display: block;
+  width: 100%;
+  height: 1px;
+  background-color: var(--color-accent);
+  transition: transform var(--transition-base), opacity var(--transition-base);
+}
+
+.hamburger[aria-expanded='true'] span:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+.hamburger[aria-expanded='true'] span:nth-child(2) {
+  opacity: 0;
+}
+.hamburger[aria-expanded='true'] span:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+/* ---- Mobile nav ---- */
+.nav-mobile {
+  position: absolute;
+  top: var(--header-height);
+  inset-inline: 0;
+  background-color: var(--color-bg);
+  border-bottom: 1px solid var(--color-accent);
+  padding-block: var(--space-4);
+}
+
+.nav-mobile ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-mobile a {
+  display: block;
+  padding: var(--space-4) var(--space-6);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--color-accent);
+  border-left: 1px solid transparent;
+  transition: border-color var(--transition-fast), opacity var(--transition-fast);
+}
+
+.nav-mobile a:hover,
+.nav-mobile a[aria-current='page'] {
+  border-left-color: var(--color-accent);
+  opacity: 1;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 767px) {
+  .nav-desktop { display: none; }
+  .hamburger   { display: flex; }
+  /* Sticky on inner pages; fixed on hero page */
+  .site-header:not(.is-transparent) { position: sticky; }
+}
+</style>
+
+<script>
+const header     = document.getElementById('site-header') as HTMLElement | null;
+const hamburger  = document.querySelector('.hamburger') as HTMLButtonElement | null;
+const mobileMenu = document.getElementById('mobile-menu') as HTMLElement | null;
+
+// ---- Scroll-aware transparency (hero pages only) ----
+if (header?.classList.contains('is-transparent')) {
+  const updateScrolled = () => {
+    // Become solid once user has scrolled past ~90% of the viewport height
+    header.classList.toggle('is-scrolled', window.scrollY > window.innerHeight * 0.88);
+  };
+  window.addEventListener('scroll', updateScrolled, { passive: true });
+  updateScrolled();
+}
+
+// ---- Hamburger ----
+if (hamburger && mobileMenu) {
+  hamburger.addEventListener('click', () => {
+    const isOpen = hamburger.getAttribute('aria-expanded') === 'true';
+    hamburger.setAttribute('aria-expanded', String(!isOpen));
+    mobileMenu.hidden = isOpen;
+    hamburger.setAttribute(
+      'aria-label',
+      isOpen ? 'Open navigation menu' : 'Close navigation menu'
+    );
+  });
+
+  document.addEventListener('click', (e) => {
+    if (
+      !hamburger.contains(e.target as Node) &&
+      !mobileMenu.contains(e.target as Node)
+    ) {
+      hamburger.setAttribute('aria-expanded', 'false');
+      mobileMenu.hidden = true;
+      hamburger.setAttribute('aria-label', 'Open navigation menu');
+    }
+  });
+}
+</script>

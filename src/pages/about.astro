@@ -1,0 +1,189 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="About"
+  description="Oliver Richman — the maker behind Oliver Tate Furniture. Bespoke furniture inspired by curves in nature, built in Cleveland, Ohio."
+>
+
+  <section class="about-hero section">
+    <div class="container">
+      <span class="section-label">The maker</span>
+      <h1 class="section-heading">About</h1>
+      <div class="divider"></div>
+    </div>
+  </section>
+
+  <section class="about-body section">
+    <div class="container about-layout">
+
+      <!-- Photo -->
+      <div class="about-photo-wrap">
+        <div class="about-photo-placeholder" aria-label="Portrait photo — coming soon">
+          <svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect width="300" height="400" fill="#f0ece3"/>
+            <circle cx="150" cy="140" r="60" fill="#d8d0c0"/>
+            <ellipse cx="150" cy="340" rx="100" ry="80" fill="#d8d0c0"/>
+          </svg>
+        </div>
+        <p class="photo-caption">Oliver Richman — photo coming soon.</p>
+      </div>
+
+      <!-- Bio -->
+      <div class="about-text">
+        <h2>Oliver Richman</h2>
+        <p>
+          I'm a furniture maker based in Cleveland, Ohio. Under the name
+          <em>Oliver Tate Furniture</em>, I design and build bespoke pieces
+          for clients who want something made specifically for them — furniture
+          that couldn't be pulled off a showroom floor.
+        </p>
+        <p>
+          My work is driven by a single question: what does wood want to do?
+          The curve of a branch, the sweep of a river bend, the arc of a breaking
+          wave — these are the forms I keep coming back to. I don't force wood
+          into rigid geometry; I look for the shapes that feel inevitable, that
+          could only have come from this particular piece of material.
+        </p>
+        <p>
+          Every commission begins with a conversation about how you live, what
+          the piece needs to do, and what draws you to natural forms. The design
+          follows from that — drawn by hand, refined in the shop, built once
+          and built right.
+        </p>
+
+        <div class="divider"></div>
+
+        <h2>The process</h2>
+        <ol class="process-list">
+          <li>
+            <strong>Discovery.</strong> We talk — by phone, email, or in person —
+            about what you need and what you're drawn to. I ask a lot of questions.
+          </li>
+          <li>
+            <strong>Design.</strong> I produce hand sketches and, for complex pieces,
+            a scale drawing. We refine until the form feels right, then I send a
+            written proposal with a fixed price and timeline.
+          </li>
+          <li>
+            <strong>Build.</strong> I select the wood personally — grain, figure,
+            and character matter as much as species. I send photos as the piece
+            takes shape in the shop.
+          </li>
+          <li>
+            <strong>Delivery.</strong> I deliver and place within the Cleveland
+            metro area. White-glove handling, every time.
+          </li>
+        </ol>
+
+        <div class="divider"></div>
+
+        <h2>Materials &amp; finish</h2>
+        <p>
+          I work primarily in domestic hardwoods — black walnut, American cherry,
+          white oak, and hard maple — sourced from local and regional mills.
+          The species is chosen for the piece, not the other way around: a curved
+          dining table base might call for steamed and bent white oak, while a
+          writing desk might want the warmth of cherry.
+        </p>
+        <p>
+          Finishes are hardwax oils (Rubio Monocoat, Osmo) and traditional shellac.
+          Both age well, protect without obscuring the grain, and can be touched
+          up in the field without stripping — important for pieces meant to last
+          more than one generation.
+        </p>
+
+        <a href="/contact" class="btn btn-primary" style="margin-top: var(--space-8);">
+          Start a conversation
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+</BaseLayout>
+
+<style>
+.about-hero { padding-block-end: var(--space-4); }
+
+.about-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-12);
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .about-layout { grid-template-columns: 300px 1fr; }
+}
+
+/* Photo */
+.about-photo-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  position: sticky;
+  top: calc(var(--header-height) + var(--space-8));
+}
+
+.about-photo-placeholder {
+  overflow: hidden;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-dark);
+}
+
+.about-photo-placeholder svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.photo-caption {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  font-style: italic;
+  text-align: center;
+  max-width: none;
+  margin: 0;
+}
+
+/* Text */
+.about-text h2 {
+  font-size: var(--text-2xl);
+  margin-block-end: var(--space-4);
+}
+
+.about-text p {
+  color: var(--color-text-muted);
+  margin-block-end: var(--space-5);
+}
+
+.process-list {
+  list-style: none;
+  counter-reset: process;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: 0;
+  margin-block-end: 0;
+}
+
+.process-list li {
+  counter-increment: process;
+  display: flex;
+  gap: var(--space-4);
+  align-items: baseline;
+  color: var(--color-text-muted);
+}
+
+.process-list li::before {
+  content: counter(process, decimal-leading-zero);
+  font-family: var(--font-serif);
+  font-size: var(--text-2xl);
+  color: var(--color-wood);
+  opacity: 0.5;
+  flex-shrink: 0;
+  line-height: 1;
+}
+</style>

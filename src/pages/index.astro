@@ -1,0 +1,433 @@
+---
+import type { ImageMetadata } from 'astro';
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const allProjects = await getCollection('projects');
+
+// Auto-detect cover images from src/assets/images/{slug}/
+// First file alphabetically in each folder = cover image.
+const imageModules = import.meta.glob<{ default: ImageMetadata }>(
+  '/src/assets/images/**/*.{jpg,jpeg,png,webp,avif,gif}',
+  { eager: true }
+);
+
+function getCoverImage(slug: string): ImageMetadata | null {
+  const entries = Object.entries(imageModules)
+    .filter(([path]) => path.startsWith(`/src/assets/images/${slug}/`))
+    .sort(([a], [b]) => a.localeCompare(b));
+  return entries[0]?.[1]?.default ?? null;
+}
+
+// Hero shows only projects that have at least one photo, featured first
+const sorted = allProjects.sort((a, b) => {
+  if (a.data.featured && !b.data.featured) return -1;
+  if (!a.data.featured && b.data.featured) return 1;
+  return b.data.date.getTime() - a.data.date.getTime();
+});
+const slides = sorted
+  .map(p => ({ project: p, cover: getCoverImage(p.slug) }))
+  .filter((s): s is { project: typeof s.project; cover: ImageMetadata } => s.cover !== null);
+---
+
+<BaseLayout
+  title="Home"
+  description="Oliver Tate Furniture — bespoke furniture designs inspired by curves in nature, handcrafted in Cleveland, Ohio."
+  heroLayout={true}
+>
+
+  <!-- ===================================================
+       FULLSCREEN HERO SLIDESHOW
+       =================================================== -->
+  <section class="hero" aria-label="Portfolio highlights">
+
+    <!-- Slides -->
+    <div class="slides" id="slides">
+      {slides.map(({ project, cover }, i) => (
+        <a
+          href={`/portfolio/${project.slug}`}
+          class:list={['slide', { active: i === 0 }]}
+          data-index={i}
+          tabindex={i === 0 ? '0' : '-1'}
+          aria-label={`View ${project.data.title}`}
+        >
+          <img
+            src={cover.src}
+            alt={project.data.coverAlt ?? project.data.title}
+            class="slide-img"
+            loading={i === 0 ? 'eager' : 'lazy'}
+            decoding={i === 0 ? 'sync' : 'async'}
+          />
+        </a>
+      ))}
+    </div>
+
+    <!-- Dark gradient overlay for text legibility -->
+    <div class="hero-overlay" aria-hidden="true"></div>
+
+    <!-- Wordmark -->
+    <div class="hero-content" aria-hidden="true">
+      <h1 class="hero-wordmark">Oliver Tate Furniture</h1>
+    </div>
+
+    <!-- Bottom bar: current project title + slide indicators -->
+    <div class="hero-bottom">
+      <a
+        href={`/portfolio/${slides[0]?.project.slug ?? '#'}`}
+        class="hero-project-link"
+        id="hero-project-link"
+        aria-live="polite"
+      >
+        <span id="hero-project-title">{slides[0]?.project.data.title ?? ''}</span>
+        <span class="hero-arrow" aria-hidden="true">→</span>
+      </a>
+
+      <div class="hero-indicators" role="tablist" aria-label="Slideshow navigation">
+        {slides.map(({ project }, i) => (
+          <button
+            class:list={['indicator', { active: i === 0 }]}
+            role="tab"
+            aria-selected={i === 0 ? 'true' : 'false'}
+            aria-label={`Slide ${i + 1}: ${project.data.title}`}
+            data-index={i}
+            data-slug={project.slug}
+            data-title={project.data.title}
+          ></button>
+        ))}
+      </div>
+    </div>
+
+    <!-- Scroll hint -->
+    <div class="scroll-hint" aria-hidden="true">
+      <span class="scroll-hint-line"></span>
+    </div>
+
+  </section>
+
+  <!-- ===================================================
+       BELOW-FOLD — minimal
+       =================================================== -->
+  <section class="intro section">
+    <div class="container intro-inner">
+      <p class="intro-text">
+        Every piece begins with the curves the natural world gave us —
+        a river's bend, a branch's arc, the sweep of a shoreline. Then it
+        is built in solid wood, from scratch, for you.
+      </p>
+      <div class="intro-actions">
+        <a href="/portfolio" class="btn btn-primary">View all work</a>
+        <a href="/contact"   class="btn btn-outline">Begin a commission</a>
+      </div>
+    </div>
+  </section>
+
+</BaseLayout>
+
+<style>
+/* ============================================================
+   HERO
+   ============================================================ */
+.hero {
+  position: relative;
+  width: 100%;
+  height: 100svh;       /* use svh so mobile browser chrome doesn't shrink it */
+  min-height: 560px;
+  overflow: hidden;
+  background-color: var(--color-black);
+}
+
+/* ---- Slides ---- */
+.slides {
+  position: absolute;
+  inset: 0;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  display: block;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.slide.active { opacity: 1; }
+
+/* Ken Burns: subtle slow zoom on the active slide */
+@keyframes kenBurns {
+  from { transform: scale(1.06); }
+  to   { transform: scale(1);    }
+}
+
+.slide.active .slide-img {
+  animation: kenBurns 8s ease-out forwards;
+}
+
+.slide-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* ---- Overlay ---- */
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(79, 65, 51, 0.28) 0%,
+    rgba(79, 65, 51, 0.08) 40%,
+    rgba(79, 65, 51, 0.12) 70%,
+    rgba(79, 65, 51, 0.55) 100%
+  );
+  pointer-events: none;
+}
+
+/* ---- Wordmark — left-aligned with generous left margin ---- */
+.hero-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  pointer-events: none;
+  padding-inline: clamp(var(--space-8), 8vw, 9rem);
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+.hero-wordmark {
+  font-family: var(--font-logo);
+  font-size: clamp(3.5rem, 8vw, 7.5rem);
+  font-weight: 400;
+  color: var(--color-bg);
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+  animation: fadeUp 1.6s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
+  text-shadow: 0 2px 28px rgba(79, 65, 51, 0.35);
+}
+
+/* ---- Bottom bar ---- */
+.hero-bottom {
+  position: absolute;
+  bottom: 0;
+  inset-inline: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-6) var(--space-8);
+  z-index: 2;
+}
+
+@media (max-width: 640px) {
+  .hero-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-4);
+    padding: var(--space-5) var(--space-6);
+  }
+}
+
+/* Project title link */
+.hero-project-link {
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 250, 0.7);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  transition: color var(--transition-fast), gap var(--transition-base);
+}
+
+.hero-project-link:hover {
+  color: var(--color-bg);
+  gap: var(--space-4);
+  opacity: 1;
+}
+
+.hero-arrow {
+  display: inline-block;
+  transition: transform var(--transition-base);
+}
+
+.hero-project-link:hover .hero-arrow {
+  transform: translateX(4px);
+}
+
+/* Slide indicators */
+.hero-indicators {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.indicator {
+  position: relative;
+  width: 28px;
+  height: 1px;
+  background: rgba(255, 255, 250, 0.3);
+  border: none;
+  cursor: pointer;
+  padding: 6px 0;       /* larger hit target */
+  background-clip: content-box;
+  transition: background-color var(--transition-fast);
+}
+
+.indicator::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--color-bg);
+  transform: translateY(-50%);
+}
+
+/* Progress fill animation on active indicator */
+@keyframes indicatorProgress {
+  from { width: 0;    }
+  to   { width: 100%; }
+}
+
+.indicator.active::after {
+  animation: indicatorProgress 5s linear forwards;
+}
+
+/* ---- Scroll hint ---- */
+.scroll-hint {
+  position: absolute;
+  bottom: var(--space-6);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2;
+  /* Hide on mobile — bottom bar takes that space */
+  display: none;
+}
+
+@keyframes scrollPulse {
+  0%   { opacity: 0.4; transform: scaleY(0.3); transform-origin: top; }
+  50%  { opacity: 1;   transform: scaleY(1);   transform-origin: top; }
+  100% { opacity: 0;   transform: scaleY(1);   transform-origin: top; }
+}
+
+.scroll-hint-line {
+  width: 1px;
+  height: 40px;
+  background: rgba(255, 255, 250, 0.5);
+  animation: scrollPulse 2s ease-in-out infinite;
+}
+
+/* ============================================================
+   BELOW FOLD
+   ============================================================ */
+.intro {
+  border-top: 1px solid var(--color-accent);
+}
+
+.intro-inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+  align-items: flex-start;
+  max-width: 800px;
+}
+
+.intro-text {
+  font-family: var(--font-serif);
+  font-size: clamp(var(--text-xl), 2.5vw, var(--text-3xl));
+  font-weight: 300;
+  font-style: italic;
+  line-height: var(--leading-snug);
+  color: var(--color-black);
+  max-width: 60ch;
+}
+
+.intro-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+</style>
+
+<script>
+// ============================================================
+//  HERO SLIDESHOW
+// ============================================================
+(function () {
+  const slides      = Array.from(document.querySelectorAll<HTMLElement>('.slide'));
+  const indicators  = Array.from(document.querySelectorAll<HTMLButtonElement>('.indicator'));
+  const titleEl     = document.getElementById('hero-project-title');
+  const linkEl      = document.getElementById('hero-project-link') as HTMLAnchorElement | null;
+
+  if (!slides.length) return;
+
+  let current  = 0;
+  let timer: ReturnType<typeof setTimeout>;
+  const INTERVAL = 5000;
+
+  function goTo(index: number) {
+    // Deactivate current
+    slides[current].classList.remove('active');
+    slides[current].setAttribute('tabindex', '-1');
+    indicators[current]?.classList.remove('active');
+    indicators[current]?.setAttribute('aria-selected', 'false');
+
+    current = index;
+
+    // Activate new
+    slides[current].classList.add('active');
+    slides[current].setAttribute('tabindex', '0');
+    indicators[current]?.classList.add('active');
+    indicators[current]?.setAttribute('aria-selected', 'true');
+
+    // Update project title + link
+    const btn = indicators[current];
+    if (btn && titleEl) titleEl.textContent = btn.dataset.title ?? '';
+    if (btn && linkEl) linkEl.href = `/portfolio/${btn.dataset.slug ?? ''}`;
+  }
+
+  function advance() {
+    goTo((current + 1) % slides.length);
+  }
+
+  function resetTimer() {
+    clearTimeout(timer);
+    timer = setTimeout(advance, INTERVAL);
+  }
+
+  // Indicator click
+  indicators.forEach((btn, i) => {
+    btn.addEventListener('click', () => {
+      goTo(i);
+      resetTimer();
+    });
+  });
+
+  // Start auto-advance
+  resetTimer();
+
+  // Pause on hover / focus
+  const hero = document.querySelector('.hero') as HTMLElement | null;
+  hero?.addEventListener('mouseenter', () => clearTimeout(timer));
+  hero?.addEventListener('mouseleave', resetTimer);
+  hero?.addEventListener('focusin',   () => clearTimeout(timer));
+  hero?.addEventListener('focusout',  resetTimer);
+})();
+</script>

@@ -1,0 +1,278 @@
+---
+import type { ImageMetadata } from 'astro';
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const allProjects = await getCollection('projects');
+const projects = allProjects.sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime()
+);
+
+const imageModules = import.meta.glob<{ default: ImageMetadata }>(
+  '/src/assets/images/**/*.{jpg,jpeg,png,webp,avif,gif}',
+  { eager: true }
+);
+
+function getCoverImage(slug: string): ImageMetadata | null {
+  const entries = Object.entries(imageModules)
+    .filter(([path]) => path.startsWith(`/src/assets/images/${slug}/`))
+    .sort(([a], [b]) => a.localeCompare(b));
+  return entries[0]?.[1]?.default ?? null;
+}
+
+const categories = ['all', 'tables', 'seating', 'storage', 'decor', 'other'] as const;
+---
+
+<BaseLayout
+  title="Portfolio"
+  description="Browse bespoke furniture by Oliver Tate Furniture — tables, seating, and one-of-a-kind pieces inspired by curves in nature."
+>
+  <section class="portfolio-hero section">
+    <div class="container">
+      <span class="section-label">Work</span>
+      <h1 class="section-heading">Portfolio</h1>
+      <p class="hero-desc">
+        Every piece is built to order, built to last. Browse recent work below
+        — and reach out if something speaks to you.
+      </p>
+      <div class="divider"></div>
+    </div>
+  </section>
+
+  <section class="portfolio-grid-section">
+    <div class="container">
+
+      <!-- Filter tabs -->
+      <div class="filter-bar" role="tablist" aria-label="Filter by category">
+        {categories.map((cat) => (
+          <button
+            class="filter-btn"
+            role="tab"
+            data-category={cat}
+            aria-selected={cat === 'all' ? 'true' : 'false'}
+          >
+            {cat.charAt(0).toUpperCase() + cat.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      <!-- Grid -->
+      <ul class="project-grid" role="list">
+        {projects.map((project) => (
+          <li class="project-card" data-category={project.data.category}>
+            <a href={`/portfolio/${project.slug}`} class="card-link">
+              <div class="card-image-wrap">
+                {(() => {
+                  const img = getCoverImage(project.slug);
+                  return img
+                    ? <img src={img.src} alt={project.data.coverAlt ?? project.data.title} loading="lazy" decoding="async" class="card-image" />
+                    : <div class="card-image card-no-image" aria-hidden="true" />;
+                })()}
+                {project.data.featured && (
+                  <span class="card-badge">Featured</span>
+                )}
+              </div>
+              <div class="card-body">
+                <span class="card-category">{project.data.category}</span>
+                <h2 class="card-title">{project.data.title}</h2>
+                <p class="card-desc">{project.data.description}</p>
+                <span class="card-cta">View project &rarr;</span>
+              </div>
+            </a>
+          </li>
+        ))}
+      </ul>
+
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+.portfolio-hero {
+  padding-block-end: var(--space-8);
+}
+
+.hero-desc {
+  font-size: var(--text-lg);
+  color: var(--color-text-muted);
+  max-width: 52ch;
+}
+
+/* Filter bar */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-block-end: var(--space-10);
+}
+
+.filter-btn {
+  padding: var(--space-2) var(--space-5);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: transparent;
+  border: 1.5px solid var(--color-border-dark);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: background-color var(--transition-fast),
+              color var(--transition-fast),
+              border-color var(--transition-fast);
+}
+
+.filter-btn[aria-selected='true'],
+.filter-btn:hover {
+  background-color: var(--color-wood);
+  border-color: var(--color-wood);
+  color: var(--color-warm-white);
+}
+
+/* Grid */
+.project-grid {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-8);
+  padding-block-end: var(--space-16);
+}
+
+@media (min-width: 640px) {
+  .project-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 1024px) {
+  .project-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* Card */
+.project-card {
+  background: var(--color-warm-white);
+  border: 1px solid var(--color-border-dark);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-base), transform var(--transition-base);
+}
+
+.project-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-3px);
+}
+
+.project-card[data-hidden] { display: none; }
+
+.card-link {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  text-decoration: none;
+  color: inherit;
+}
+
+.card-image-wrap {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background-color: var(--color-surface);
+}
+
+.card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-slow);
+}
+
+.card-no-image {
+  background-color: var(--color-accent);
+  opacity: 0.15;
+}
+
+.project-card:hover .card-image {
+  transform: scale(1.04);
+}
+
+.card-badge {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  padding: var(--space-1) var(--space-3);
+  background-color: var(--color-wood);
+  color: var(--color-warm-white);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: var(--radius-sm);
+}
+
+.card-body {
+  padding: var(--space-5) var(--space-6) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1;
+}
+
+.card-category {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-wood);
+}
+
+.card-title {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--color-charcoal);
+  line-height: var(--leading-snug);
+  margin: 0;
+}
+
+.card-desc {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  line-height: var(--leading-normal);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: none;
+  margin: 0;
+  flex: 1;
+}
+
+.card-cta {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-wood);
+  margin-top: var(--space-2);
+  transition: letter-spacing var(--transition-fast);
+}
+
+.project-card:hover .card-cta {
+  letter-spacing: 0.02em;
+}
+</style>
+
+<script>
+const filterBtns = document.querySelectorAll<HTMLButtonElement>('.filter-btn');
+const cards = document.querySelectorAll<HTMLLIElement>('.project-card');
+
+filterBtns.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const cat = btn.dataset.category ?? 'all';
+
+    filterBtns.forEach((b) => b.setAttribute('aria-selected', 'false'));
+    btn.setAttribute('aria-selected', 'true');
+
+    cards.forEach((card) => {
+      const match = cat === 'all' || card.dataset.category === cat;
+      card.toggleAttribute('data-hidden', !match);
+    });
+  });
+});
+</script>
