@@ -233,7 +233,7 @@ const year = new Date().getFullYear();
   height: 2.1em;   /* 2 lines × line-height 1.05 */
   width: auto;
   display: block;
-  margin-top: -11px;
+  margin-top: -0.15em;  /* em scales with font-size at all breakpoints */
 }
 
 .wm-oliver {
@@ -247,7 +247,7 @@ const year = new Date().getFullYear();
    * Offset = 0.32em − 0.04em gap = −0.28em.
    */
   margin-left: -0.28em;
-  margin-top: -10px;
+  margin-top: -0.14em;  /* em scales with font-size at all breakpoints */
 }
 
 .wm-tate {
@@ -260,7 +260,7 @@ const year = new Date().getFullYear();
    * Offset = 0.42em − 0.04em gap = −0.38em → also gives a small hanging indent vs "liver".
    */
   margin-left: -0.38em;
-  margin-top: -30px;
+  margin-top: -0.42em;  /* em scales with font-size at all breakpoints */
 }
 
 .wm-furniture {
@@ -269,7 +269,7 @@ const year = new Date().getFullYear();
   align-self: end;
   font-size: clamp(1.5rem, 3.5vw, 3.2rem);
   letter-spacing: 0.06em;
-  margin-bottom: 15px;
+  margin-bottom: 0.29em;  /* em scales with furniture's own font-size */
 }
 
 /* ---- Bottom bar ---- */
