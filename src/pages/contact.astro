@@ -120,19 +120,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           <ul class="info-list">
             <li>
               <strong>Lead time</strong>
-              <span>Currently booking 8–16 weeks out. Reach out early.</span>
+              <span>Currently booking 12–18 weeks out. Reach out early.</span>
             </li>
             <li>
               <strong>Minimum commission</strong>
               <span>I generally don't take projects under $2,000.</span>
-            </li>
-            <li>
-              <strong>Delivery area</strong>
-              <span>I deliver within the greater Cleveland area. Pieces can also be arranged for pickup from the shop.</span>
-            </li>
-            <li>
-              <strong>Payment</strong>
-              <span>50% deposit to begin, 50% on completion. Check, bank transfer, or Venmo.</span>
             </li>
           </ul>
         </div>
@@ -359,16 +351,29 @@ form?.addEventListener('submit', async (e) => {
 
   if (!valid) return;
 
-  // When a form backend (Netlify, Formspree, etc.) is wired up,
-  // replace this block with the actual fetch call.
-  // For now, show a friendly message so development looks complete.
+  const submitBtn = form.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+  if (submitBtn) submitBtn.disabled = true;
+
   try {
-    // TODO: wire up real form submission, e.g.:
-    // await fetch('/api/contact', { method: 'POST', body: data });
-    if (successMsg) successMsg.hidden = false;
-    form.reset();
+    const res = await fetch('https://formspree.io/f/xdawnyoo', {
+      method: 'POST',
+      body: data,
+      headers: { Accept: 'application/json' },
+    });
+    const json = await res.json();
+    if (res.ok && json.ok !== false) {
+      form.reset();
+      successMsg?.removeAttribute('hidden');
+      successMsg?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } else {
+      errorMsg?.removeAttribute('hidden');
+      errorMsg?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
   } catch {
-    if (errorMsg) errorMsg.hidden = false;
+    errorMsg?.removeAttribute('hidden');
+    errorMsg?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } finally {
+    if (submitBtn) submitBtn.disabled = false;
   }
 });
 </script>

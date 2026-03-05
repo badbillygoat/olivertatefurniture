@@ -104,9 +104,11 @@ const dateStr = project.data.date.toLocaleDateString('en-US', {
                 </div>
               )}
             </dl>
-            <a href="/contact" class="btn btn-primary" style="width:100%; justify-content:center; margin-top: var(--space-6);">
-              Inquire about this piece
-            </a>
+            {project.data.available && (
+              <a href="/contact" class="btn btn-primary" style="width:100%; justify-content:center; margin-top: var(--space-6);">
+                Inquire about this piece
+              </a>
+            )}
           </div>
         </aside>
 

@@ -9,7 +9,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
   <section class="about-hero section">
     <div class="container">
-      <span class="section-label">The maker</span>
+      <span class="section-label">The designer-maker</span>
       <h1 class="section-heading">About</h1>
       <div class="divider"></div>
     </div>
@@ -34,21 +34,20 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       <div class="about-text">
         <h2>Oliver Richman</h2>
         <p>
-          I'm a furniture maker based in Cleveland, Ohio. Under the name
-          <em>Oliver Tate Furniture</em>, I design and build bespoke pieces
+          Oliver is a furniture maker based in Cleveland, Ohio. Under the name
+          <em>Oliver Tate Furniture</em>, he designs and builds bespoke pieces
           for clients who want something made specifically for them — furniture
           that couldn't be pulled off a showroom floor.
         </p>
         <p>
-          My work is driven by a single question: what does wood want to do?
-          The curve of a branch, the sweep of a river bend, the arc of a breaking
-          wave — these are the forms I keep coming back to. I don't force wood
-          into rigid geometry; I look for the shapes that feel inevitable, that
-          could only have come from this particular piece of material.
+          His work is driven by a exploring how nature and the human form can be captured
+          within a piece of functional, artistic furniture. He draws inspiration from his environment, including
+          the curve of a leaf, the hamstring tendons of a ballerina, and the shadows of mountains. 
+          Oliver believes contributing to diversity in the built environment is an integral part of human expression.
         </p>
         <p>
           Every commission begins with a conversation about how you live, what
-          the piece needs to do, and what draws you to natural forms. The design
+          the piece needs to do, and what draws you certain shapes, forms, or styles. The design
           follows from that — drawn by hand, refined in the shop, built once
           and built right.
         </p>
@@ -58,41 +57,28 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         <h2>The process</h2>
         <ol class="process-list">
           <li>
-            <strong>Discovery.</strong> We talk — by phone, email, or in person —
-            about what you need and what you're drawn to. I ask a lot of questions.
+            <strong>Discovery.</strong>
+            <span>We talk — ideally in person or over a video call —
+            about what you need and what you're drawn to. I ask a lot of questions.</span>
           </li>
           <li>
-            <strong>Design.</strong> I produce hand sketches and, for complex pieces,
+            <strong>Design.</strong>
+            <span>I produce hand sketches and, for complex pieces,
             a scale drawing. We refine until the form feels right, then I send a
-            written proposal with a fixed price and timeline.
+            written proposal with a fixed price and estimated timeline.</span>
           </li>
           <li>
-            <strong>Build.</strong> I select the wood personally — grain, figure,
+            <strong>Build.</strong>
+            <span>I select the wood personally — grain, figure,
             and character matter as much as species. I send photos as the piece
-            takes shape in the shop.
+            takes shape in the shop.</span>
           </li>
           <li>
-            <strong>Delivery.</strong> I deliver and place within the Cleveland
-            metro area. White-glove handling, every time.
+            <strong>Delivery.</strong>
+            <span>I personally deliver when locale allows around the Great Lakes region, and ship globally with our trusted logistics partners. 
+            White-glove handling, every time.</span>
           </li>
         </ol>
-
-        <div class="divider"></div>
-
-        <h2>Materials &amp; finish</h2>
-        <p>
-          I work primarily in domestic hardwoods — black walnut, American cherry,
-          white oak, and hard maple — sourced from local and regional mills.
-          The species is chosen for the piece, not the other way around: a curved
-          dining table base might call for steamed and bent white oak, while a
-          writing desk might want the warmth of cherry.
-        </p>
-        <p>
-          Finishes are hardwax oils (Rubio Monocoat, Osmo) and traditional shellac.
-          Both age well, protect without obscuring the grain, and can be touched
-          up in the field without stripping — important for pieces meant to last
-          more than one generation.
-        </p>
 
         <a href="/contact" class="btn btn-primary" style="margin-top: var(--space-8);">
           Start a conversation
@@ -162,19 +148,19 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 .process-list {
   list-style: none;
   counter-reset: process;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
+  /* Shared 3-column grid: [counter] [label] [description] */
+  display: grid;
+  grid-template-columns: auto max-content 1fr;
+  column-gap: var(--space-4);
+  row-gap: var(--space-5);
   padding: 0;
   margin-block-end: 0;
 }
 
 .process-list li {
+  /* "Dissolve" the li so its children become direct grid items */
+  display: contents;
   counter-increment: process;
-  display: flex;
-  gap: var(--space-4);
-  align-items: baseline;
-  color: var(--color-text-muted);
 }
 
 .process-list li::before {
@@ -183,7 +169,16 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   font-size: var(--text-2xl);
   color: var(--color-wood);
   opacity: 0.5;
-  flex-shrink: 0;
   line-height: 1;
+  align-self: baseline;
+}
+
+.process-list li strong {
+  align-self: baseline;
+}
+
+.process-list li span {
+  color: var(--color-text-muted);
+  align-self: baseline;
 }
 </style>

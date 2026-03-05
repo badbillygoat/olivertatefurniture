@@ -9,6 +9,8 @@ interface Props {
   ogImage?: string;
   /** When true: header is fixed + transparent, overlays the hero */
   heroLayout?: boolean;
+  /** When true: footer is hidden (used on home page) */
+  hideFooter?: boolean;
 }
 
 const {
@@ -16,6 +18,7 @@ const {
   description = 'Oliver Tate Furniture — bespoke furniture designs inspired by curves in nature, handcrafted in Cleveland, Ohio.',
   ogImage,
   heroLayout = false,
+  hideFooter = false,
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin);
@@ -37,7 +40,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin)
     <meta property="og:url"         content={canonicalURL} />
     {ogImage && <meta property="og:image" content={ogImage} />}
 
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="/logos/OT-Logo-white.svg" />
     <meta name="theme-color" content="#4f4133" />
   </head>
 
@@ -48,6 +51,6 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin)
       <slot />
     </main>
 
-    <Footer />
+    {!hideFooter && <Footer />}
   </body>
 </html>

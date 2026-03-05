@@ -24,7 +24,8 @@ const currentPath = Astro.url.pathname.replace(/\/$/, '') || '/';
 
     <!-- Logo — hidden on the hero page (hero wordmark replaces it) -->
     <a href="/" class="logo" aria-label="Oliver Tate Furniture — Home">
-      Oliver Tate Furniture
+      {!transparent && <img src="/logos/OT-Logo-black.svg" alt="Oliver Tate Furniture" class="logo-img" />}
+      {!transparent && <span class="logo-name">Oliver Tate Furniture</span>}
     </a>
 
     <!-- Desktop nav -->
@@ -92,36 +93,27 @@ const currentPath = Astro.url.pathname.replace(/\/$/, '') || '/';
   position: fixed;
   width: 100%;
   background-color: transparent;
-  border-bottom: 1px solid transparent;
+  border-bottom: none;
 }
 
-/* Logo is invisible in transparent mode — hero content IS the wordmark */
-.site-header.is-transparent .logo {
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--transition-base);
-}
-
-/* After scrolling: JS adds .is-scrolled → solid header + logo appears */
+/* After scrolling: JS adds .is-scrolled → solid header */
 .site-header.is-transparent.is-scrolled {
   background-color: var(--color-bg);
-  border-bottom-color: var(--color-accent);
+  border-bottom: 1px solid var(--color-accent);
 }
 
-.site-header.is-transparent.is-scrolled .logo {
-  opacity: 1;
-  pointer-events: auto;
+/* Nav links are black on transparent header, with soft white fade behind */
+.site-header.is-transparent:not(.is-scrolled) {
+  background: linear-gradient(to bottom, rgba(255, 255, 250, 0.55) 0%, transparent 75%);
 }
-
-/* Nav links are light on transparent header (hero has dark bg/images) */
 .site-header.is-transparent:not(.is-scrolled) .nav-desktop a {
-  color: var(--color-bg);
+  color: #000000;
 }
 .site-header.is-transparent:not(.is-scrolled) .nav-desktop a::after {
-  background-color: var(--color-bg);
+  background-color: #000000;
 }
 .site-header.is-transparent:not(.is-scrolled) .hamburger span {
-  background-color: var(--color-bg);
+  background-color: #000000;
 }
 
 /* ---- Layout ---- */
@@ -135,16 +127,29 @@ const currentPath = Astro.url.pathname.replace(/\/$/, '') || '/';
 
 /* ---- Logo ---- */
 .logo {
-  font-family: var(--font-logo);
-  font-size: 1.65rem;
-  color: var(--color-accent);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
   text-decoration: none;
-  line-height: 1;
-  white-space: nowrap;
   transition: opacity var(--transition-base);
 }
 
 .logo:hover { opacity: 0.6; }
+
+.logo-img {
+  height: 48px;
+  width: auto;
+  display: block;
+}
+
+.logo-name {
+  font-family: var(--font-sans);
+  font-size: var(--text-xl);
+  font-weight: 300;
+  letter-spacing: 0.1em;
+  color: var(--color-accent);
+  white-space: nowrap;
+}
 
 /* ---- Desktop nav ---- */
 .nav-desktop ul {
