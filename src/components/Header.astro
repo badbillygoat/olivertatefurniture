@@ -104,7 +104,7 @@ const currentPath = Astro.url.pathname.replace(/\/$/, '') || '/';
 
 /* Nav links are black on transparent header, with soft white fade behind */
 .site-header.is-transparent:not(.is-scrolled) {
-  background: linear-gradient(to bottom, rgba(255, 255, 250, 0.55) 0%, transparent 75%);
+  background: linear-gradient(to bottom, rgba(255, 255, 250, 0.82) 0%, rgba(255, 255, 250, 0.55) 60%, transparent 100%);
 }
 .site-header.is-transparent:not(.is-scrolled) .nav-desktop a {
   color: #000000;
