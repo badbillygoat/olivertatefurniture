@@ -122,30 +122,6 @@ const projectData = Object.fromEntries(
                 </div>
               </div>
             </a>
-
-            <!-- Mobile inline expand (accordion) -->
-            <div class="card-expand" aria-hidden="true">
-              <div class="card-expand-inner">
-                <button class="expand-close" aria-label="Close detail">&times;</button>
-                <div class="expand-gallery">
-                  <img class="expand-img" src="" alt="" />
-                </div>
-                <div class="expand-nav">
-                  <button class="expand-prev" aria-label="Previous image">&#8249;</button>
-                  <span class="expand-counter"></span>
-                  <button class="expand-next" aria-label="Next image">&#8250;</button>
-                </div>
-                <div class="expand-info">
-                  <span class="expand-category"></span>
-                  <h2 class="expand-title"></h2>
-                  <p class="expand-desc"></p>
-                  <dl class="expand-specs"></dl>
-                  <a href="/contact" class="btn btn-primary expand-cta" style="display:none;">
-                    Inquire about this piece
-                  </a>
-                </div>
-              </div>
-            </div>
           </li>
         ))}
       </ul>
@@ -595,145 +571,6 @@ const projectData = Object.fromEntries(
   margin-top: var(--space-4);
 }
 
-/* ── Mobile inline expand ─────────────────────────────────────────────── */
-/* Hidden on desktop — accordion only on mobile */
-.card-expand {
-  display: none;
-}
-
-@media (max-width: 767px) {
-  .card-expand {
-    display: block;
-  }
-  .card-expand-inner {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.4s ease;
-  }
-  .card-expand.is-open .card-expand-inner {
-    max-height: 900px;
-  }
-}
-
-.card-expand-inner {
-  background: var(--color-bg);
-  border-top: 1px solid var(--color-accent);
-  position: relative;
-}
-
-/* Close button */
-.expand-close {
-  position: absolute;
-  top: var(--space-3);
-  right: var(--space-4);
-  background: none;
-  border: none;
-  color: #1c1b19;
-  font-size: 1.8rem;
-  line-height: 1;
-  cursor: pointer;
-  padding: var(--space-1);
-  z-index: 1;
-}
-
-/* Gallery */
-.expand-gallery {
-  width: 100%;
-  padding: var(--space-6) var(--space-4) var(--space-3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.expand-img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
-/* Nav */
-.expand-nav {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-4);
-  padding: var(--space-2) 0;
-}
-
-.expand-prev,
-.expand-next {
-  background: none;
-  border: none;
-  color: #1c1b19;
-  font-size: 2.2rem;
-  line-height: 1;
-  cursor: pointer;
-  padding: var(--space-2);
-}
-
-.expand-counter {
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  font-weight: 300;
-  letter-spacing: 0.1em;
-  color: #1c1b19;
-  min-width: 3ch;
-  text-align: center;
-}
-
-/* Info */
-.expand-info {
-  padding: var(--space-5) var(--space-8) var(--space-7) var(--space-8);
-}
-
-.expand-category {
-  display: block;
-  font-size: var(--text-xs);
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--color-accent);
-  margin-block-end: var(--space-2);
-}
-
-.expand-title {
-  font-family: var(--font-serif);
-  font-size: var(--text-2xl);
-  font-weight: 300;
-  color: #1c1b19;
-  margin-block-end: var(--space-3);
-}
-
-.expand-desc {
-  font-size: var(--text-sm);
-  line-height: 1.7;
-  color: #1c1b19;
-  margin-block-end: var(--space-5);
-}
-
-.expand-specs {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  margin-top: var(--space-5);
-  margin-block-end: var(--space-5);
-}
-
-.expand-specs:empty { display: none; }
-
-/* Spec rows are JS-created — need :global to reach them */
-:global(.expand-specs .modal-spec-row dt) {
-  font-size: var(--text-xs);
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-accent);
-}
-:global(.expand-specs .modal-spec-row dd),
-:global(.expand-specs .modal-spec-row li) {
-  font-size: var(--text-sm);
-  color: #1c1b19;
-}
 </style>
 
 <script define:vars={{ projectData }}>
@@ -837,24 +674,6 @@ function closeModal() {
   modalImg.src = '';
 }
 
-// ── Mobile inline expand ─────────────────────────────────────────────────
-let expandImages = [];
-let expandIndex  = 0;
-let expandCard   = null;
-
-function expandShowImage(index) {
-  if (!expandCard || !expandImages.length) return;
-  expandIndex = (index + expandImages.length) % expandImages.length;
-  const img     = expandCard.querySelector('.expand-img');
-  const nav     = expandCard.querySelector('.expand-nav');
-  const counter = expandCard.querySelector('.expand-counter');
-  img.src = expandImages[expandIndex];
-  img.alt = expandCard.querySelector('.expand-title').textContent + ' — photo ' + (expandIndex + 1);
-  const many = expandImages.length > 1;
-  nav.hidden = !many;
-  counter.textContent = (expandIndex + 1) + ' / ' + expandImages.length;
-}
-
 function buildSpecs(specsEl, p) {
   specsEl.innerHTML = '';
   const rows = [
@@ -878,62 +697,15 @@ function buildSpecs(specsEl, p) {
   }
 }
 
-function closeExpand() {
-  if (!expandCard) return;
-  expandCard.querySelector('.card-expand').classList.remove('is-open');
-  expandCard.querySelector('.card-expand').setAttribute('aria-hidden', 'true');
-  expandCard.style.overflow = '';
-  expandCard = null;
-  expandImages = [];
-}
-
-function openExpand(card) {
-  if (expandCard === card) { closeExpand(); return; }
-  if (expandCard) closeExpand();
-
-  const p = projectData[card.dataset.slug];
-  if (!p) return;
-  expandCard = card;
-  card.style.overflow = 'visible';
-
-  card.querySelector('.expand-category').textContent = p.category;
-  card.querySelector('.expand-title').textContent    = p.title;
-  card.querySelector('.expand-desc').textContent     = p.description;
-  buildSpecs(card.querySelector('.expand-specs'), p);
-  const cta = card.querySelector('.expand-cta');
-  cta.style.display = p.available ? '' : 'none';
-
-  expandImages = p.images;
-  expandShowImage(0);
-
-  const expand = card.querySelector('.card-expand');
-  expand.classList.add('is-open');
-  expand.setAttribute('aria-hidden', 'false');
-  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-// Attach expand nav/close listeners once per card
-cards.forEach((card) => {
-  card.querySelector('.expand-prev')?.addEventListener('click', (e) => {
-    e.stopPropagation(); expandShowImage(expandIndex - 1);
-  });
-  card.querySelector('.expand-next')?.addEventListener('click', (e) => {
-    e.stopPropagation(); expandShowImage(expandIndex + 1);
-  });
-  card.querySelector('.expand-close')?.addEventListener('click', (e) => {
-    e.stopPropagation(); closeExpand();
-  });
-});
-
-// Card click interception — modal on desktop, expand on mobile
+// Card click interception — modal on desktop, navigate on mobile
 cards.forEach((card) => {
   const link = card.querySelector('.card-link');
   if (!link) return;
   link.addEventListener('click', (e) => {
-    e.preventDefault();
-    if (window.innerWidth <= 767) {
-      openExpand(card);
-    } else {
+    // Mobile: navigate to detail page normally
+    // Desktop: open modal
+    if (window.innerWidth > 900) {
+      e.preventDefault();
       openModal(card.dataset.slug);
     }
   });
@@ -953,4 +725,11 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowLeft')  showImage(currentIndex - 1);
   if (e.key === 'ArrowRight') showImage(currentIndex + 1);
 });
+
+// Open modal from hero link (e.g. /portfolio#bubinga-maple-tray)
+const hash = window.location.hash.slice(1);
+if (hash && projectData[hash] && window.innerWidth > 900) {
+  openModal(hash);
+}
+history.replaceState(null, '', window.location.pathname);
 </script>
