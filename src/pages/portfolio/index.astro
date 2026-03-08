@@ -394,6 +394,17 @@ const projectData = Object.fromEntries(
   mask-composite: intersect;
 }
 
+@media (max-width: 600px) {
+  .modal-panel {
+    -webkit-mask-image:
+      linear-gradient(to right,  transparent, black 24px, black calc(100% - 24px), transparent),
+      linear-gradient(to bottom, transparent, black 24px, black calc(100% - 24px), transparent);
+    mask-image:
+      linear-gradient(to right,  transparent, black 24px, black calc(100% - 24px), transparent),
+      linear-gradient(to bottom, transparent, black 24px, black calc(100% - 24px), transparent);
+  }
+}
+
 .modal-backdrop.is-open .modal-panel {
   transform: translateY(0);
 }
