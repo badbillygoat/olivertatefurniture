@@ -11,6 +11,8 @@ interface Props {
   heroLayout?: boolean;
   /** When true: footer is hidden (used on home page) */
   hideFooter?: boolean;
+  /** When true: use title as-is, without appending site name */
+  rawTitle?: boolean;
 }
 
 const {
@@ -19,6 +21,7 @@ const {
   ogImage,
   heroLayout = false,
   hideFooter = false,
+  rawTitle = false,
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin);
@@ -30,7 +33,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin)
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>{title} | Oliver Tate Furniture</title>
+    <title>{rawTitle ? title : `${title} | Oliver Tate Furniture`}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalURL} />
 
@@ -40,7 +43,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin)
     <meta property="og:url"         content={canonicalURL} />
     {ogImage && <meta property="og:image" content={ogImage} />}
 
-    <link rel="icon" type="image/svg+xml" href="/logos/OT-Logo-white.svg" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="theme-color" content="#4f4133" />
 
     <!-- Google Analytics -->
