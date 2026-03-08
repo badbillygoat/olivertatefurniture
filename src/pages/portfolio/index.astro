@@ -628,7 +628,7 @@ const projectData = Object.fromEntries(
   right: var(--space-4);
   background: none;
   border: none;
-  color: var(--color-black);
+  color: #1c1b19;
   font-size: 1.8rem;
   line-height: 1;
   cursor: pointer;
@@ -664,7 +664,7 @@ const projectData = Object.fromEntries(
 .expand-next {
   background: none;
   border: none;
-  color: var(--color-black);
+  color: #1c1b19;
   font-size: 2.2rem;
   line-height: 1;
   cursor: pointer;
@@ -676,7 +676,7 @@ const projectData = Object.fromEntries(
   font-size: var(--text-sm);
   font-weight: 300;
   letter-spacing: 0.1em;
-  color: var(--color-black);
+  color: #1c1b19;
   min-width: 3ch;
   text-align: center;
 }
@@ -700,14 +700,14 @@ const projectData = Object.fromEntries(
   font-family: var(--font-serif);
   font-size: var(--text-2xl);
   font-weight: 300;
-  color: var(--color-black);
+  color: #1c1b19;
   margin-block-end: var(--space-3);
 }
 
 .expand-desc {
   font-size: var(--text-sm);
   line-height: 1.7;
-  color: var(--color-black);
+  color: #1c1b19;
   margin-block-end: var(--space-5);
 }
 
@@ -732,7 +732,7 @@ const projectData = Object.fromEntries(
 :global(.expand-specs .modal-spec-row dd),
 :global(.expand-specs .modal-spec-row li) {
   font-size: var(--text-sm);
-  color: var(--color-black);
+  color: #1c1b19;
 }
 </style>
 
@@ -882,6 +882,7 @@ function closeExpand() {
   if (!expandCard) return;
   expandCard.querySelector('.card-expand').classList.remove('is-open');
   expandCard.querySelector('.card-expand').setAttribute('aria-hidden', 'true');
+  expandCard.style.overflow = '';
   expandCard = null;
   expandImages = [];
 }
@@ -893,6 +894,7 @@ function openExpand(card) {
   const p = projectData[card.dataset.slug];
   if (!p) return;
   expandCard = card;
+  card.style.overflow = 'visible';
 
   card.querySelector('.expand-category').textContent = p.category;
   card.querySelector('.expand-title').textContent    = p.title;
