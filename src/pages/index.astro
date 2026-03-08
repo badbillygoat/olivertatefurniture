@@ -170,7 +170,7 @@ const year = new Date().getFullYear();
   width: 100%;
   height: 100%;
   max-width: none;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
 }
 
@@ -534,11 +534,9 @@ const year = new Date().getFullYear();
   // Start auto-advance
   resetTimer();
 
-  // Pause on hover / focus
+  // Pause on hover
   const hero = document.querySelector('.hero') as HTMLElement | null;
   hero?.addEventListener('mouseenter', () => clearTimeout(timer));
   hero?.addEventListener('mouseleave', resetTimer);
-  hero?.addEventListener('focusin',   () => clearTimeout(timer));
-  hero?.addEventListener('focusout',  resetTimer);
 })();
 </script>
