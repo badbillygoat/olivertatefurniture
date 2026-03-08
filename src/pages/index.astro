@@ -49,7 +49,7 @@ const year = new Date().getFullYear();
     <div class="slides" id="slides">
       {slides.map(({ project, cover }, i) => (
         <a
-          href={`/portfolio#${project.slug}`}
+          href={`/portfolio/#${project.slug}`}
           class:list={['slide', { active: i === 0 }]}
           data-index={i}
           tabindex={i === 0 ? '0' : '-1'}
@@ -82,7 +82,7 @@ const year = new Date().getFullYear();
     <!-- Bottom bar: current project title + slide indicators -->
     <div class="hero-bottom">
       <a
-        href={`/portfolio#${slides[0]?.project.slug ?? ''}`}
+        href={`/portfolio/#${slides[0]?.project.slug ?? ''}`}
         class="hero-project-link"
         id="hero-project-link"
         aria-live="polite"
@@ -503,7 +503,7 @@ const year = new Date().getFullYear();
     // Update project title + link
     const btn = indicators[current];
     if (btn && titleEl) titleEl.textContent = btn.dataset.title ?? '';
-    if (btn && linkEl) linkEl.href = `/portfolio#${btn.dataset.slug ?? ''}`;
+    if (btn && linkEl) linkEl.href = `/portfolio/#${btn.dataset.slug ?? ''}`;
   }
 
   function advance() {
