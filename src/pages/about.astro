@@ -20,22 +20,16 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
       <!-- Photo -->
       <div class="about-photo-wrap">
-        <div class="about-photo-placeholder" aria-label="Portrait photo — coming soon">
-          <svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <rect width="300" height="400" fill="#f0ece3"/>
-            <circle cx="150" cy="140" r="60" fill="#d8d0c0"/>
-            <ellipse cx="150" cy="340" rx="100" ry="80" fill="#d8d0c0"/>
-          </svg>
-        </div>
-        <p class="photo-caption">Oliver Richman — photo coming soon.</p>
+        <img src="/images/profile_photo.jpg" alt="Oliver Richman, maker" class="about-photo" />
+        <p class="photo-caption">Oliver Richman</p>
       </div>
 
       <!-- Bio -->
       <div class="about-text">
         <h2>Oliver Richman</h2>
         <p>
-          Oliver is a furniture maker based in Cleveland, Ohio. Under the name
-          <em>Oliver Tate Furniture</em>, he designs and builds bespoke pieces
+          Oliver is a furniture designer & maker based in Cleveland, Ohio. Under the name
+          <em>Oliver Tate Furniture</em>, he designs and builds custom pieces
           for clients who want something made specifically for them — furniture
           that couldn't be pulled off a showroom floor.
         </p>
@@ -119,6 +113,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   .about-photo-wrap {
     position: static;
   }
+}
+
+.about-photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  border: 3px solid var(--color-accent);
 }
 
 .about-photo-placeholder {
