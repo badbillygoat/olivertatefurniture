@@ -12,10 +12,14 @@ const imageModules = import.meta.glob<{ default: ImageMetadata }>(
   { eager: true }
 );
 
-function getCoverImage(slug: string): ImageMetadata | null {
+function getHeroImage(slug: string, heroImage?: string): ImageMetadata | null {
   const entries = Object.entries(imageModules)
     .filter(([path]) => path.startsWith(`/src/assets/images/${slug}/`))
     .sort(([a], [b]) => a.localeCompare(b));
+  if (heroImage) {
+    const match = entries.find(([path]) => path.endsWith(`/${heroImage}`));
+    if (match) return match[1].default;
+  }
   return entries[0]?.[1]?.default ?? null;
 }
 
@@ -26,7 +30,7 @@ const sorted = allProjects.sort((a, b) => {
   return b.data.date.getTime() - a.data.date.getTime();
 });
 const slides = sorted
-  .map(p => ({ project: p, cover: getCoverImage(p.slug) }))
+  .map(p => ({ project: p, cover: getHeroImage(p.slug, p.data.heroImage) }))
   .filter((s): s is { project: typeof s.project; cover: ImageMetadata } => s.cover !== null);
 
 const year = new Date().getFullYear();

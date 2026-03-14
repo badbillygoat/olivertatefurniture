@@ -3,6 +3,7 @@ title: Tea & Coffee Box
 description: Box to hold morning beverages, including hidden storage for emergency sweets.
 date: 2026-03-13
 coverAlt: Tea & Coffee Box
+heroImage: laurens-teabox-1.jpg
 #category ideas: Tables, Seating, Storage, Decor, Kitchen, Other
 category: Storage, Kitchen
 featured: false
@@ -14,6 +15,7 @@ materials:
   - Fumed Oak
   - Boiled Linseed Oil
 dimensions: 16" × 8" × 7"
+heroImage: laurens-teabox-2.jpg
 ---
 
 

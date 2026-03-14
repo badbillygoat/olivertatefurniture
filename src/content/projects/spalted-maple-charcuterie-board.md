@@ -12,6 +12,7 @@ materials:
   - Brushed Nickle
   - Mineral Oil Finish
 dimensions: 48" × 24" × 30"
+heroImage: spalted-maple-charuterie-board-2.jpg
 ---
 
 

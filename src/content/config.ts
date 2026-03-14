@@ -8,6 +8,9 @@ const projects = defineCollection({
     date:        z.coerce.date(),
     // coverImage removed — images are auto-detected from src/assets/images/{slug}/
     coverAlt:    z.string().optional(), // falls back to title if omitted
+    // heroImage: filename to use on the home page slideshow (e.g. "laurens-teabox-3.jpg")
+    // If omitted, the first image alphabetically is used.
+    heroImage:   z.string().optional(),
     category:    z.string(),
     featured:    z.boolean().default(false),
     available:   z.boolean().default(false),
