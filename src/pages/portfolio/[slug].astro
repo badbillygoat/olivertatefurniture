@@ -1,5 +1,6 @@
 ---
 import type { ImageMetadata } from 'astro';
+import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 
@@ -47,12 +48,13 @@ const dateStr = project.data.date.toLocaleDateString('en-US', {
         <div class="gallery-slides">
           {projectImages.map((img, i) => (
             <div class:list={['gallery-slide', { active: i === 0 }]} data-index={i}>
-              <img
-                src={img.src}
+              <Image
+                src={img}
                 alt={`${project.data.title} — photo ${i + 1}`}
                 class="gallery-img"
-                loading={i === 0 ? 'eager' : 'lazy'}
-                decoding={i === 0 ? 'sync' : 'async'}
+                widths={[800, 1200, 1600]}
+                sizes="100vw"
+                loading="eager"
               />
             </div>
           ))}
