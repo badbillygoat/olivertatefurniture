@@ -1,10 +1,10 @@
 ---
-title: Morning Box
+title: Tea & Coffee Box
 description: Box to hold morning beverages, including hidden storage for emergency sweets.
 date: 2026-03-13
-coverAlt: Tea Box
+coverAlt: Tea & Coffee Box
 #category ideas: Tables, Seating, Storage, Decor, Kitchen, Other
-category: Storage
+category: Storage, Kitchen
 featured: false
 available: false
 materials:
