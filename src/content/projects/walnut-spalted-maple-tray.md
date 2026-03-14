@@ -11,7 +11,7 @@ materials:
   - Walnut (hand carved handles)
   - Spalted Maple
   - Mineral Oil Finish
-dimensions: 48" × 24" × 30"
+dimensions: 20" × 9" × 2.5"
 ---
 
 

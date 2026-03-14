@@ -15,7 +15,7 @@ materials:
   - Canarywood
   - Curly Maple
   - Mineral Oil Finish
-dimensions: 48" × 24" × 30"
+dimensions: 32" × 14" × .5"
 ---
 
 

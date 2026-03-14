@@ -12,6 +12,6 @@ materials:
   - Maple
   - Brass
   - Mineral Oil Finish
-dimensions: 96" × 42" × 30"
+dimensions: 20" × 8" × .75"
 ---
 

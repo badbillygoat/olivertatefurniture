@@ -12,8 +12,8 @@ materials:
   - Cherry
   - Walnut
   - African Mahogany
-  - Mineral Oil Finish 
-dimensions: 48" × 24" × 30"
+  - Mineral Oil Finish
+dimensions: 24" × 18" × 1.5"
 ---
 
 
