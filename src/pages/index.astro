@@ -480,70 +480,61 @@ const year = new Date().getFullYear();
 
   if (!slides.length) return;
 
-  let current  = 0;
+  let current = 0;
   let timer: ReturnType<typeof setTimeout>;
-  const INTERVAL = 10000;
+  const INTERVAL = 10000; // 7s pan + 3s pause
 
   const KB_ORIGINS = ['center', 'top left', 'top right', 'bottom left', 'bottom right'];
 
   function goTo(index: number) {
-    // Deactivate current
     slides[current].classList.remove('active');
     slides[current].setAttribute('tabindex', '-1');
     indicators[current]?.classList.remove('active');
     indicators[current]?.setAttribute('aria-selected', 'false');
 
-    current = index;
+    current = (index + slides.length) % slides.length;
 
-    // Randomize Ken Burns direction on the incoming slide
     const img = slides[current].querySelector<HTMLElement>('.slide-img');
     if (img) {
       img.style.transformOrigin = KB_ORIGINS[Math.floor(Math.random() * KB_ORIGINS.length)];
     }
 
-    // Activate new
     slides[current].classList.add('active');
     slides[current].setAttribute('tabindex', '0');
     indicators[current]?.classList.add('active');
     indicators[current]?.setAttribute('aria-selected', 'true');
 
-    // Update project title + link
     const btn = indicators[current];
     if (btn && titleEl) titleEl.textContent = btn.dataset.title ?? '';
     if (btn && linkEl) linkEl.href = `/portfolio/#${btn.dataset.slug ?? ''}`;
   }
 
-  function advance() {
-    goTo((current + 1) % slides.length);
-    resetTimer(); // keep looping
-  }
-
-  function resetTimer() {
+  function startTimer() {
     clearTimeout(timer);
-    timer = setTimeout(advance, INTERVAL);
+    timer = setTimeout(() => {
+      goTo(current + 1);
+      startTimer();
+    }, INTERVAL);
   }
 
-  // Indicator click
+  // Indicator clicks
   indicators.forEach((btn, i) => {
-    btn.addEventListener('click', () => {
-      goTo(i);
-      resetTimer();
-    });
+    btn.addEventListener('click', () => { goTo(i); startTimer(); });
   });
 
   // Next-slide chevron
-  const nextBtn = document.querySelector<HTMLButtonElement>('.hero-next');
-  nextBtn?.addEventListener('click', () => {
-    advance();
-    resetTimer();
-  });
+  document.querySelector<HTMLButtonElement>('.hero-next')
+    ?.addEventListener('click', () => { goTo(current + 1); startTimer(); });
 
-  // Start auto-advance
-  resetTimer();
+  // Pause on hover — desktop only (touch devices fire mouseenter but never mouseleave,
+  // which would permanently kill the timer)
+  if (window.matchMedia('(hover: hover)').matches) {
+    const hero = document.querySelector('.hero');
+    hero?.addEventListener('mouseenter', () => clearTimeout(timer));
+    hero?.addEventListener('mouseleave', startTimer);
+  }
 
-  // Pause on hover
-  const hero = document.querySelector('.hero') as HTMLElement | null;
-  hero?.addEventListener('mouseenter', () => clearTimeout(timer));
-  hero?.addEventListener('mouseleave', resetTimer);
+  // Start
+  startTimer();
 })();
 </script>
