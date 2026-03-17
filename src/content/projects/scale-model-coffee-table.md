@@ -1,7 +1,7 @@
 ---
 title: Scale Model Coffee Table
 description: Built to explore color, contrast, proportions, and form during a commission's design phase.
-date: 2026-02-10
+date: 2026-03-16
 coverAlt: Scale model coffee table with sunburst veneer and arched white oak base.
 #category ideas: Tables, Seating, Storage, Decor, Kitchen, Other
 category: Tables
