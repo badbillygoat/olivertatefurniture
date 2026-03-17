@@ -526,14 +526,6 @@ const year = new Date().getFullYear();
   document.querySelector<HTMLButtonElement>('.hero-next')
     ?.addEventListener('click', () => { goTo(current + 1); startTimer(); });
 
-  // Pause on hover — desktop only (touch devices fire mouseenter but never mouseleave,
-  // which would permanently kill the timer)
-  if (window.matchMedia('(hover: hover)').matches) {
-    const hero = document.querySelector('.hero');
-    hero?.addEventListener('mouseenter', () => clearTimeout(timer));
-    hero?.addEventListener('mouseleave', startTimer);
-  }
-
   // Start
   startTimer();
 })();
