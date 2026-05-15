@@ -174,7 +174,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 }
 
 .process-list li::before {
-  content: counter(process, decimal-leading-zero);
   font-family: var(--font-serif);
   font-size: var(--text-2xl);
   color: var(--color-wood);
@@ -182,6 +181,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   line-height: 1;
   align-self: baseline;
 }
+.process-list li:nth-child(1)::before { content: "01"; }
+.process-list li:nth-child(2)::before { content: "02"; }
+.process-list li:nth-child(3)::before { content: "03"; }
+.process-list li:nth-child(4)::before { content: "04"; }
 
 .process-list li strong {
   align-self: baseline;
