@@ -1,5 +1,5 @@
 ---
-title: Coffee Table (Model)
+title: Coffee Table 1 (Model)
 description: Built to explore color, contrast, proportions, and form during a commission's design phase.
 date: 2026-03-16
 coverAlt: Scale model coffee table with sunburst veneer and arched white oak base.
