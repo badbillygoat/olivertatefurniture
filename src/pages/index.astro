@@ -76,6 +76,9 @@ const year = new Date().getFullYear();
     <!-- Dark gradient overlay for text legibility -->
     <div class="hero-overlay" aria-hidden="true"></div>
 
+    <!-- White edge fade: covers letterbox bars and blends image into bg -->
+    <div class="hero-edge-fade" aria-hidden="true"></div>
+
     <!-- Wordmark -->
     <div class="hero-content" aria-hidden="true">
       <h1 class="hero-wordmark" aria-label="Oliver Tate Furniture">
@@ -139,7 +142,7 @@ const year = new Date().getFullYear();
   height: 100svh;       /* use svh so mobile browser chrome doesn't shrink it */
   min-height: 560px;
   overflow: hidden;
-  background-color: var(--color-black);
+  background-color: var(--color-bg);
 }
 
 /* ---- Slides ---- */
@@ -163,8 +166,8 @@ const year = new Date().getFullYear();
 
 /* Ken Burns: starts zoomed in, pans out to reveal full image */
 @keyframes kenBurns {
-  from { transform: scale(1.18); }
-  to   { transform: scale(1);    }
+  from { transform: scale(1.1); }
+  to   { transform: scale(1);   }
 }
 
 .slide.active .slide-img {
@@ -177,7 +180,7 @@ const year = new Date().getFullYear();
   width: 100%;
   height: 100%;
   max-width: none;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
 }
 
@@ -192,6 +195,13 @@ const year = new Date().getFullYear();
     rgba(79, 65, 51, 0.12) 70%,
     rgba(79, 65, 51, 0.55) 100%
   );
+  pointer-events: none;
+}
+
+/* ---- Edge fade: background set by JS to align with contained image bounds ---- */
+.hero-edge-fade {
+  position: absolute;
+  inset: 0;
   pointer-events: none;
 }
 
@@ -477,8 +487,38 @@ const year = new Date().getFullYear();
   const indicators  = Array.from(document.querySelectorAll<HTMLButtonElement>('.indicator'));
   const titleEl     = document.getElementById('hero-project-title');
   const linkEl      = document.getElementById('hero-project-link') as HTMLAnchorElement | null;
+  const edgeFade    = document.querySelector<HTMLElement>('.hero-edge-fade');
 
   if (!slides.length) return;
+
+  // Recalculate and apply the white-to-transparent gradient so it starts exactly
+  // at the rendered image boundary (not the window edge).
+  function updateEdgeFade(slideIndex: number) {
+    if (!edgeFade) return;
+    const img = slides[slideIndex]?.querySelector<HTMLImageElement>('.slide-img');
+    if (!img) return;
+    function apply() {
+      const iw = img!.naturalWidth, ih = img!.naturalHeight;
+      if (!iw || !ih) return;
+      const cw = img!.offsetWidth,  ch = img!.offsetHeight;
+      const scale = Math.min(cw / iw, ch / ih);
+      const rw = iw * scale, rh = ih * scale;
+      // Bar widths as % of container — gradient starts solid here, fades into image
+      const lPct  = ((cw - rw) / 2 / cw) * 100;
+      const tPct  = ((ch - rh) / 2 / ch) * 100;
+      // Fade zone = 6% of rendered image dimension, expressed as % of container
+      const fwPct = (rw * 0.06 / cw) * 100;
+      const fhPct = (rh * 0.06 / ch) * 100;
+      const c = 'var(--color-bg)';
+      edgeFade!.style.background = [
+        `linear-gradient(to right,  ${c} ${lPct}%, transparent ${lPct + fwPct}%)`,
+        `linear-gradient(to left,   ${c} ${lPct}%, transparent ${lPct + fwPct}%)`,
+        `linear-gradient(to bottom, ${c} ${tPct}%, transparent ${tPct + fhPct}%)`,
+      ].join(', ');
+    }
+    if (img.complete && img.naturalWidth) { apply(); }
+    else { img.addEventListener('load', apply, { once: true }); }
+  }
 
   let current = 0;
   let timer: ReturnType<typeof setTimeout>;
@@ -507,6 +547,7 @@ const year = new Date().getFullYear();
     const btn = indicators[current];
     if (btn && titleEl) titleEl.textContent = btn.dataset.title ?? '';
     if (btn && linkEl) linkEl.href = `/portfolio/#${btn.dataset.slug ?? ''}`;
+    updateEdgeFade(current);
   }
 
   function startTimer() {
@@ -527,6 +568,8 @@ const year = new Date().getFullYear();
     ?.addEventListener('click', () => { goTo(current + 1); startTimer(); });
 
   // Start
+  updateEdgeFade(0);
+  window.addEventListener('resize', () => updateEdgeFade(current), { passive: true });
   startTimer();
 })();
 </script>
