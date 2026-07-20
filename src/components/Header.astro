@@ -102,9 +102,14 @@ const currentPath = Astro.url.pathname.replace(/\/$/, '') || '/';
   border-bottom: 1px solid var(--color-accent);
 }
 
-/* Nav links are black on transparent header, with soft white fade behind */
+/* Nav links are black on transparent header; nav centered above the wordmark */
 .site-header.is-transparent:not(.is-scrolled) {
-  background: linear-gradient(to bottom, rgba(255, 255, 250, 0.82) 0%, rgba(255, 255, 250, 0.55) 60%, transparent 100%);
+  background: transparent;
+}
+.site-header.is-transparent .nav-desktop {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }
 .site-header.is-transparent:not(.is-scrolled) .nav-desktop a {
   color: #000000;
