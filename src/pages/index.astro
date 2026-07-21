@@ -31,10 +31,11 @@ const allImages = sorted
     return {
       img: imgs[0],
       alt: p.data.coverAlt ?? p.data.title,
+      slug: p.slug,
       panelSide: pi % 2,
     };
   })
-  .filter((x): x is { img: ImageMetadata; alt: string; panelSide: number } => x !== null);
+  .filter((x): x is { img: ImageMetadata; alt: string; slug: string; panelSide: number } => x !== null);
 
 const leftImages  = allImages.filter(x => x.panelSide === 0);
 const rightImages = allImages.filter(x => x.panelSide === 1);
@@ -142,19 +143,23 @@ const year = new Date().getFullYear();
   <!-- LEFT IMAGE PANEL -->
   <div class="zipper-panel zipper-panel--left" style={`clip-path: polygon(${zipD.leftPoly})`} aria-hidden="true">
     <div class="panel-track">
-      {leftImages.map(({ img, alt }) => (
-        <Image
-          src={img}
-          alt={alt}
-          class="panel-img"
-          widths={[800, 1200]}
-          sizes="75vw"
-          loading="eager"
-          decoding="async"
-        />
+      {leftImages.map(({ img, alt, slug }) => (
+        <a href={`/portfolio#${slug}`} class="panel-link" tabindex="-1">
+          <Image
+            src={img}
+            alt={alt}
+            class="panel-img"
+            widths={[800, 1200]}
+            sizes="75vw"
+            loading="eager"
+            decoding="async"
+          />
+        </a>
       ))}
-      {leftImages.map(({ img }) => (
-        <Image src={img} alt="" class="panel-img" widths={[800, 1200]} sizes="75vw" loading="eager" decoding="async" />
+      {leftImages.map(({ img, slug }) => (
+        <a href={`/portfolio#${slug}`} class="panel-link" tabindex="-1">
+          <Image src={img} alt="" class="panel-img" widths={[800, 1200]} sizes="75vw" loading="eager" decoding="async" />
+        </a>
       ))}
     </div>
   </div>
@@ -162,19 +167,23 @@ const year = new Date().getFullYear();
   <!-- RIGHT IMAGE PANEL -->
   <div class="zipper-panel zipper-panel--right" style={`clip-path: polygon(${zipD.rightPoly})`} aria-hidden="true">
     <div class="panel-track panel-track--right">
-      {rightImages.map(({ img, alt }) => (
-        <Image
-          src={img}
-          alt={alt}
-          class="panel-img"
-          widths={[800, 1200]}
-          sizes="50vw"
-          loading="eager"
-          decoding="async"
-        />
+      {rightImages.map(({ img, alt, slug }) => (
+        <a href={`/portfolio#${slug}`} class="panel-link" tabindex="-1">
+          <Image
+            src={img}
+            alt={alt}
+            class="panel-img"
+            widths={[800, 1200]}
+            sizes="50vw"
+            loading="eager"
+            decoding="async"
+          />
+        </a>
       ))}
-      {rightImages.map(({ img }) => (
-        <Image src={img} alt="" class="panel-img" widths={[800, 1200]} sizes="50vw" loading="eager" decoding="async" />
+      {rightImages.map(({ img, slug }) => (
+        <a href={`/portfolio#${slug}`} class="panel-link" tabindex="-1">
+          <Image src={img} alt="" class="panel-img" widths={[800, 1200]} sizes="50vw" loading="eager" decoding="async" />
+        </a>
       ))}
     </div>
   </div>
@@ -305,6 +314,18 @@ const year = new Date().getFullYear();
   to   { transform: translateY(-50%); }
 }
 
+/* Each image links to that piece's popup gallery (/portfolio#slug opens the
+   modal there). tabindex=-1 in the markup keeps these decorative, scrolling
+   images out of the keyboard tab order. */
+.panel-link {
+  display: block;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+.panel-link:hover { opacity: 0.9; }
+
 /* Single border between images creates the separator line. Only one side
    (not both) so adjacent images don't stack two borders into a line twice
    as thick as the zipper seam — this keeps it matching the zip-edge
@@ -313,7 +334,6 @@ const year = new Date().getFullYear();
   width: 100%;
   height: auto;
   display: block;
-  flex-shrink: 0;
   border-bottom: 1.5px solid #000;
 }
 
