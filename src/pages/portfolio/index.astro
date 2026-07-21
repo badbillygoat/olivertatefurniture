@@ -384,25 +384,6 @@ const projectData = Object.fromEntries(
   transform: translateY(14px);
   transition: transform 0.3s ease;
   overflow: hidden;
-  -webkit-mask-image:
-    linear-gradient(to right,  transparent, black 48px, black calc(100% - 48px), transparent),
-    linear-gradient(to bottom, transparent, black 48px, black calc(100% - 48px), transparent);
-  -webkit-mask-composite: destination-in;
-  mask-image:
-    linear-gradient(to right,  transparent, black 48px, black calc(100% - 48px), transparent),
-    linear-gradient(to bottom, transparent, black 48px, black calc(100% - 48px), transparent);
-  mask-composite: intersect;
-}
-
-@media (max-width: 600px) {
-  .modal-panel {
-    -webkit-mask-image:
-      linear-gradient(to right,  transparent, black 12px, black calc(100% - 12px), transparent),
-      linear-gradient(to bottom, transparent, black 12px, black calc(100% - 12px), transparent);
-    mask-image:
-      linear-gradient(to right,  transparent, black 12px, black calc(100% - 12px), transparent),
-      linear-gradient(to bottom, transparent, black 12px, black calc(100% - 12px), transparent);
-  }
 }
 
 .modal-backdrop.is-open .modal-panel {
@@ -435,7 +416,9 @@ const projectData = Object.fromEntries(
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-5) 0 var(--space-3);
+  /* Equal brown border on top + both sides (bottom is a little tighter, the
+     nav bar sits below). Fixed padding, so it holds for any image aspect ratio. */
+  padding: var(--space-5) var(--space-5) var(--space-3);
 }
 
 .modal-img {
@@ -446,15 +429,6 @@ const projectData = Object.fromEntries(
   max-height: 65vh;
   margin: 0 auto;
   object-fit: contain;
-  /* Vignette: fade all 4 edges into the brown background */
-  -webkit-mask-image:
-    linear-gradient(to right,  transparent, black 28px, black calc(100% - 28px), transparent),
-    linear-gradient(to bottom, transparent, black 28px, black calc(100% - 28px), transparent);
-  -webkit-mask-composite: destination-in;
-  mask-image:
-    linear-gradient(to right,  transparent, black 28px, black calc(100% - 28px), transparent),
-    linear-gradient(to bottom, transparent, black 28px, black calc(100% - 28px), transparent);
-  mask-composite: intersect;
 }
 
 /* Gallery nav bar */

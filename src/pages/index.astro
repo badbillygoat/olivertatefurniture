@@ -40,70 +40,91 @@ const leftImages  = allImages.filter(x => x.panelSide === 0);
 const rightImages = allImages.filter(x => x.panelSide === 1);
 
 // ── Zipper geometry ──────────────────────────────────────────────────────────
-// Two cubic bezier curves define the zipper edges (in % units matching the SVG
-// viewBox 0 0 100 100).  Control points are chosen so that:
-//   P1.y = P0.y = 0  →  perfectly HORIZONTAL tangent at the top of each edge
-//   P2.x = P3.x = 50 →  perfectly VERTICAL tangent at the pull-tab point
-// This gives the "exponential" curve shape: nearly horizontal across the top,
-// sweeping steeply inward as it approaches the pull tab.
+// The zipper is defined by a PULL POINT (where the two open curves converge and
+// the closed seam begins) and a SPINE TILT angle. All coordinates are in % of
+// the viewport, matching the SVG viewBox "0 0 100 100" (y increases downward).
+//
+// Dragging the pull point to the right and tilting the spine makes the whole
+// zipper sit at an angle for an asymmetric hero. Each open edge is a cubic
+// bezier that leaves the top edge HORIZONTALLY (control point shares y=0) and
+// arrives at the pull point leaning ALONG THE SPINE, so the closed seam below
+// continues the line rather than kinking. (The pull-tab graphic sits right on
+// the join and hides any tiny discontinuity.)
 
-function cubicBezierPts(
-  p0: [number,number], p1: [number,number],
-  p2: [number,number], p3: [number,number],
-  steps = 24
-): [number,number][] {
+type Pt = [number, number];
+
+function cubicBezierPts(p0: Pt, p1: Pt, p2: Pt, p3: Pt, steps = 24): Pt[] {
   return Array.from({ length: steps + 1 }, (_, i) => {
     const t = i / steps, mt = 1 - t;
     return [
       mt**3*p0[0] + 3*mt**2*t*p1[0] + 3*mt*t**2*p2[0] + t**3*p3[0],
       mt**3*p0[1] + 3*mt**2*t*p1[1] + 3*mt*t**2*p2[1] + t**3*p3[1],
-    ] as [number, number];
+    ] as Pt;
   });
 }
 
-const PULL_Y  = 83;   // pull tab at 5/6 of screen height
+// Control points of one open edge: top anchor (topX,0) → pull point.
+function edgeCtrl(topX: number, p1x: number, pull: Pt, dDown: Pt, handle: number): [Pt, Pt, Pt, Pt] {
+  return [
+    [topX, 0],
+    [p1x, 0],                                                 // horizontal tangent at top
+    [pull[0] - handle * dDown[0], pull[1] - handle * dDown[1]], // tangent along the spine
+    [pull[0], pull[1]],
+  ];
+}
 
-// Desktop: image panels start at 25% from each edge at the top
-const lcD = cubicBezierPts([25, 0], [40, 0], [50, 82], [50, PULL_Y]);
-const rcD = cubicBezierPts([75, 0], [60, 0], [50, 82], [50, PULL_Y]);
+const fmtPt   = ([x, y]: Pt) => `${x.toFixed(2)}% ${y.toFixed(2)}%`;
+const svgPath = (c: [Pt, Pt, Pt, Pt]) =>
+  `M ${c[0][0].toFixed(2)},${c[0][1].toFixed(2)} C ${c[1][0].toFixed(2)},${c[1][1].toFixed(2)} ` +
+  `${c[2][0].toFixed(2)},${c[2][1].toFixed(2)} ${c[3][0].toFixed(2)},${c[3][1].toFixed(2)}`;
 
-// Above the pull tab the panels follow the bezier V-curve.
-// Below the pull tab they extend to the very bottom of the screen, split
-// at x=50% so together they cover the full viewport height.
+interface ZipCfg {
+  leftTop: number; rightTop: number; leftP1: number; rightP1: number;
+  pull: Pt; tiltDeg: number; handle: number;
+}
 
-// Left panel:  top-left corner → bezier → pull point → straight down → bottom-left
-const leftPoly = [
-  '0% 0%',
-  ...lcD.map(([x, y]) => `${x.toFixed(2)}% ${y.toFixed(2)}%`),
-  '50% 100%',
-  '0% 100%',
-].join(',');
+function buildZipper(cfg: ZipCfg) {
+  const th = (cfg.tiltDeg * Math.PI) / 180;
+  const dDown: Pt = [Math.sin(th), Math.cos(th)];          // spine direction (downward)
+  const spineX = (y: number) => cfg.pull[0] + (y - cfg.pull[1]) * (dDown[0] / dDown[1]);
 
-// Right panel: bezier (top→pull) → straight down → bottom-right → top-right corner
-const rightPoly = [
-  ...rcD.map(([x, y]) => `${x.toFixed(2)}% ${y.toFixed(2)}%`),
-  '50% 100%',
-  '100% 100%',
-  '100% 0%',
-].join(',');
+  const lCtrl = edgeCtrl(cfg.leftTop,  cfg.leftP1,  cfg.pull, dDown, cfg.handle);
+  const rCtrl = edgeCtrl(cfg.rightTop, cfg.rightP1, cfg.pull, dDown, cfg.handle);
+  const lPts  = cubicBezierPts(...lCtrl);
+  const rPts  = cubicBezierPts(...rCtrl);
 
-// Mobile: widen the open gap so the logo fits on narrow screens
-const lcM = cubicBezierPts([12, 0], [22, 0], [50, 82], [50, PULL_Y]);
-const rcM = cubicBezierPts([88, 0], [78, 0], [50, 82], [50, PULL_Y]);
+  const seamBot: Pt = [spineX(100), 100];   // where the seam splits the bottom edge
+  const seamEnd: Pt = [spineX(104), 104];   // seam line runs a touch past the bottom
 
-const leftPolyMobile = [
-  '0% 0%',
-  ...lcM.map(([x, y]) => `${x.toFixed(2)}% ${y.toFixed(2)}%`),
-  '50% 100%',
-  '0% 100%',
-].join(',');
+  // Left panel:  top-left corner → left edge → down the seam → bottom-left corner
+  const leftPoly = ['0% 0%', ...lPts.map(fmtPt), fmtPt(seamBot), '0% 100%'].join(',');
+  // Right panel: right edge → down the seam → bottom-right → top-right corner
+  const rightPoly = [...rPts.map(fmtPt), fmtPt(seamBot), '100% 100%', '100% 0%'].join(',');
 
-const rightPolyMobile = [
-  ...rcM.map(([x, y]) => `${x.toFixed(2)}% ${y.toFixed(2)}%`),
-  '50% 100%',
-  '100% 100%',
-  '100% 0%',
-].join(',');
+  // Widest rightward reach of the LEFT region (the seam at the bottom, or the
+  // pull point) — the left image track must be this wide to fill it. The right
+  // region never reaches left of the pull, so its track stays at a fixed 50%.
+  const leftTrackW = Math.max(seamBot[0], cfg.pull[0]) + 1.5;
+
+  return {
+    leftPoly, rightPoly, leftTrackW,
+    dLeft: svgPath(lCtrl), dRight: svgPath(rCtrl),
+    seam: { x1: cfg.pull[0], y1: cfg.pull[1], x2: seamEnd[0], y2: seamEnd[1] },
+    pullX: cfg.pull[0], pullY: cfg.pull[1], tiltDeg: cfg.tiltDeg,
+  };
+}
+
+// Desktop: pull dragged to ~2/3 across, spine tilted for an asymmetric look.
+const zipD = buildZipper({
+  leftTop: 25, rightTop: 75, leftP1: 46, rightP1: 71,
+  pull: [66.67, 83], tiltDeg: 16, handle: 14,
+});
+
+// Mobile: wider opening so the wordmark fits; gentler drag + tilt.
+const zipM = buildZipper({
+  leftTop: 12, rightTop: 88, leftP1: 38, rightP1: 80,
+  pull: [60, 83], tiltDeg: 11, handle: 12,
+});
 
 const year = new Date().getFullYear();
 ---
@@ -119,7 +140,7 @@ const year = new Date().getFullYear();
 <section class="hero-zipper" aria-label="Oliver Tate Furniture">
 
   <!-- LEFT IMAGE PANEL -->
-  <div class="zipper-panel zipper-panel--left" style={`clip-path: polygon(${leftPoly})`} aria-hidden="true">
+  <div class="zipper-panel zipper-panel--left" style={`clip-path: polygon(${zipD.leftPoly})`} aria-hidden="true">
     <div class="panel-track">
       {leftImages.map(({ img, alt }) => (
         <Image
@@ -127,19 +148,19 @@ const year = new Date().getFullYear();
           alt={alt}
           class="panel-img"
           widths={[800, 1200]}
-          sizes="50vw"
+          sizes="75vw"
           loading="eager"
           decoding="async"
         />
       ))}
       {leftImages.map(({ img }) => (
-        <Image src={img} alt="" class="panel-img" widths={[800, 1200]} sizes="50vw" loading="eager" decoding="async" />
+        <Image src={img} alt="" class="panel-img" widths={[800, 1200]} sizes="75vw" loading="eager" decoding="async" />
       ))}
     </div>
   </div>
 
   <!-- RIGHT IMAGE PANEL -->
-  <div class="zipper-panel zipper-panel--right" style={`clip-path: polygon(${rightPoly})`} aria-hidden="true">
+  <div class="zipper-panel zipper-panel--right" style={`clip-path: polygon(${zipD.rightPoly})`} aria-hidden="true">
     <div class="panel-track panel-track--right">
       {rightImages.map(({ img, alt }) => (
         <Image
@@ -167,12 +188,12 @@ const year = new Date().getFullYear();
     preserveAspectRatio="none"
     aria-hidden="true"
   >
-    <!-- Left curved edge: horizontal tangent at top, vertical at pull tab -->
-    <path class="zip-edge" d="M 25,0 C 40,0 50,82 50,83" vector-effect="non-scaling-stroke" />
-    <!-- Right curved edge (mirror) -->
-    <path class="zip-edge" d="M 75,0 C 60,0 50,82 50,83" vector-effect="non-scaling-stroke" />
-    <!-- Closed seam stitching below the pull tab -->
-    <line class="zip-seam" x1="50" y1="83" x2="50" y2="104" vector-effect="non-scaling-stroke" />
+    <!-- Left curved edge: horizontal tangent at top, along the spine at the pull -->
+    <path id="zip-edge-left" class="zip-edge" d={zipD.dLeft} vector-effect="non-scaling-stroke" />
+    <!-- Right curved edge -->
+    <path id="zip-edge-right" class="zip-edge" d={zipD.dRight} vector-effect="non-scaling-stroke" />
+    <!-- Closed seam stitching below the pull tab (tilted along the spine) -->
+    <line id="zip-seam" class="zip-seam" x1={zipD.seam.x1} y1={zipD.seam.y1} x2={zipD.seam.x2} y2={zipD.seam.y2} vector-effect="non-scaling-stroke" />
   </svg>
 
   <!-- PULL TAB at the tip of the V -->
@@ -193,28 +214,37 @@ const year = new Date().getFullYear();
 
 </section>
 
-<!-- Mobile: wider V so the wordmark fits. Runs immediately to avoid flash. -->
-<script define:vars={{ leftPolyMobile, rightPolyMobile }}>
+<!-- Swap the whole zipper (clip, edges, seam, pull) between the desktop and the
+     wider mobile config. Runs immediately to avoid a flash. -->
+<script define:vars={{ zipD, zipM }}>
 (function () {
-  function applyClip() {
-    const lp = document.querySelector('.zipper-panel--left');
-    const rp = document.querySelector('.zipper-panel--right');
-    if (!lp || !rp) return;
-    if (window.innerWidth <= 640) {
-      lp.style.clipPath = `polygon(${leftPolyMobile})`;
-      rp.style.clipPath = `polygon(${rightPolyMobile})`;
-    } else {
-      lp.style.clipPath = lp.getAttribute('data-clip-desktop') || '';
-      rp.style.clipPath = rp.getAttribute('data-clip-desktop') || '';
+  const hero  = document.querySelector('.hero-zipper');
+  const lp    = document.querySelector('.zipper-panel--left');
+  const rp    = document.querySelector('.zipper-panel--right');
+  const edgeL = document.getElementById('zip-edge-left');
+  const edgeR = document.getElementById('zip-edge-right');
+  const seam  = document.getElementById('zip-seam');
+  if (!hero || !lp || !rp) return;
+
+  function apply() {
+    const z = window.innerWidth <= 640 ? zipM : zipD;
+    lp.style.clipPath = `polygon(${z.leftPoly})`;
+    rp.style.clipPath = `polygon(${z.rightPoly})`;
+    if (edgeL) edgeL.setAttribute('d', z.dLeft);
+    if (edgeR) edgeR.setAttribute('d', z.dRight);
+    if (seam) {
+      seam.setAttribute('x1', z.seam.x1);
+      seam.setAttribute('y1', z.seam.y1);
+      seam.setAttribute('x2', z.seam.x2);
+      seam.setAttribute('y2', z.seam.y2);
     }
+    hero.style.setProperty('--zip-px', z.pullX + '%');
+    hero.style.setProperty('--zip-py', z.pullY + '%');
+    hero.style.setProperty('--zip-rot', z.tiltDeg + 'deg');
+    hero.style.setProperty('--left-track-w', z.leftTrackW + '%');
   }
-  // Store desktop clip so we can restore on resize
-  const lp = document.querySelector('.zipper-panel--left');
-  const rp = document.querySelector('.zipper-panel--right');
-  if (lp) lp.setAttribute('data-clip-desktop', lp.style.clipPath);
-  if (rp) rp.setAttribute('data-clip-desktop', rp.style.clipPath);
-  applyClip();
-  window.addEventListener('resize', applyClip, { passive: true });
+  apply();
+  window.addEventListener('resize', apply, { passive: true });
 })();
 </script>
 
@@ -225,7 +255,12 @@ const year = new Date().getFullYear();
    ZIPPER HERO
    ============================================================ */
 .hero-zipper {
-  --zip-py: 83%;   /* pull-tab y position: 5/6 of screen */
+  /* Pull-tab position + spine tilt. Defaults are the desktop config; the inline
+     script overrides these for the mobile config on narrow screens. */
+  --zip-px: 66.67%;      /* pull-tab x: ~2/3 across */
+  --zip-py: 83%;         /* pull-tab y: 5/6 of screen height */
+  --zip-rot: 16deg;      /* spine tilt from vertical */
+  --left-track-w: 73%;   /* left image track — wide enough to reach the tilted seam */
 
   position: relative;
   width: 100%;
@@ -249,15 +284,17 @@ const year = new Date().getFullYear();
   display: flex;
   flex-direction: column;
   will-change: transform;
-  animation: driftUp 180s linear infinite;
+  animation: driftUp 156.5s linear infinite;   /* 15% faster than the original 180s */
 }
 
-.zipper-panel--left  .panel-track { left:  0; }
+/* Left region is the wide side of the tilted zipper, so its track is widened
+   (via the script-set var) to reach the seam; the right side stays at 50%. */
+.zipper-panel--left  .panel-track { left:  0; width: var(--left-track-w, 73%); }
 .zipper-panel--right .panel-track { right: 0; }
 
 .panel-track--right {
-  animation-duration: 220s;
-  animation-delay: -110s;   /* start mid-cycle so panels drift out of sync */
+  animation-duration: 191.3s;   /* 15% faster than the original 220s */
+  animation-delay: -95.65s;     /* start mid-cycle so panels drift out of sync */
 }
 
 /* Seamless loop: 2 identical image sets stacked.
@@ -268,14 +305,15 @@ const year = new Date().getFullYear();
   to   { transform: translateY(-50%); }
 }
 
-/* Thin black border on top+bottom of each image creates a clear
-   visual separation between pictures in the panel. */
+/* Single border between images creates the separator line. Only one side
+   (not both) so adjacent images don't stack two borders into a line twice
+   as thick as the zipper seam — this keeps it matching the zip-edge
+   stroke-width of 1.5. */
 .panel-img {
   width: 100%;
   height: auto;
   display: block;
   flex-shrink: 0;
-  border-top: 1.5px solid #000;
   border-bottom: 1.5px solid #000;
 }
 
@@ -291,12 +329,12 @@ const year = new Date().getFullYear();
 
 .zip-edge {
   fill: none;
-  stroke: var(--color-black);
+  stroke: #000;
   stroke-width: 1.5;
 }
 
 .zip-seam {
-  stroke: var(--color-black);
+  stroke: #000;
   stroke-width: 1;
   stroke-dasharray: 5 4;
 }
@@ -304,13 +342,13 @@ const year = new Date().getFullYear();
 /* ---- Pull tab ---- */
 .zipper-pull {
   position: absolute;
-  left: 50%;
+  left: var(--zip-px);
   top: var(--zip-py);
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) rotate(var(--zip-rot));
   z-index: 4;
   width: 13px;
   height: 20px;
-  background: var(--color-black);
+  background: #000;
   border-radius: 2px;
   pointer-events: none;
 }
@@ -318,8 +356,10 @@ const year = new Date().getFullYear();
 /* ---- Logo in the open V gap ---- */
 .zipper-logo {
   position: absolute;
-  left: 50%;
-  top: 15%;
+  /* Centered in the OPEN gap, which drifts right + narrows as it descends
+     toward the (off-centre) pull point — so this sits right of screen centre. */
+  left: 57%;
+  top: 18%;
   transform: translate(-50%, -50%);
   z-index: 5;
   pointer-events: none;
@@ -402,6 +442,12 @@ const year = new Date().getFullYear();
 
 /* ---- Mobile: wordmark scaling (clip-path swap is handled by inline script) ---- */
 @media (max-width: 640px) {
+  .zipper-logo {
+    /* Mobile gap drifts right less (gentler tilt, pull at 60%). */
+    left: 53%;
+    top: 16%;
+  }
+
   .hero-wordmark {
     font-size: clamp(1rem, 5.5vw, 1.8rem);
   }
