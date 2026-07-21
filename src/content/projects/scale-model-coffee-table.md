@@ -14,6 +14,7 @@ materials:
   - Oil based urethane gel finish
 dimensions: 9" × 9" × 6"
 heroImage: scale-model-coffee-table-1.jpg
+heroSide: major
 ---
 
 

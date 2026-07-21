@@ -14,6 +14,7 @@ materials:
   - Danish Oil
 dimensions: 7" × 12" × 8.5"
 heroImage: foot-stool-1-1.jpg
+heroSide: major
 ---
 
 

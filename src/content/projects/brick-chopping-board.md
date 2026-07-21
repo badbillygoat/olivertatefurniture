@@ -14,6 +14,7 @@ materials:
   - African Mahogany
   - Mineral Oil Finish
 dimensions: 24" × 18" × 1.5"
+heroSide: minor
 ---
 
 

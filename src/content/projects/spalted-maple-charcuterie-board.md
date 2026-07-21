@@ -13,6 +13,7 @@ materials:
   - Mineral Oil Finish
 dimensions: 18" × 8" × .75"
 heroImage: spalted-maple-charuterie-board-2.jpg
+heroSide: minor
 ---
 
 

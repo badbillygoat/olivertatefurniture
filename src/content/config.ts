@@ -11,6 +11,10 @@ const projects = defineCollection({
     // heroImage: filename to use on the home page slideshow (e.g. "laurens-teabox-3.jpg")
     // If omitted, the first image alphabetically is used.
     heroImage:   z.string().optional(),
+    // heroSide: which side of the home-page hero the piece's image loops on.
+    //   'major' = the larger/wide side, 'minor' = the smaller/narrow side.
+    //   Use 'major' for your best pieces. If omitted, sides alternate automatically.
+    heroSide:    z.enum(['major', 'minor']).optional(),
     category:    z.string(),
     featured:    z.boolean().default(false),
     available:   z.boolean().default(false),

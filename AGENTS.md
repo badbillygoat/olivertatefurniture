@@ -60,11 +60,15 @@ that `dev` mode won't always surface.
 2. Add `src/content/projects/<slug>.md` with frontmatter per
    `src/content/config.ts`:
    - Required: `title`, `description`, `date`, `category`
-   - Optional: `coverAlt`, `heroImage`, `featured`, `available`, `order`,
-     `materials[]`, `dimensions`, `duration`
+   - Optional: `coverAlt`, `heroImage`, `heroSide`, `featured`, `available`,
+     `order`, `materials[]`, `dimensions`, `duration`
    - `category` can be a comma-separated list (e.g. `Tables, Decor`) — the
      portfolio filter bar derives its tabs from whatever categories exist
      across all projects, so no separate enum to update.
+   - `heroSide` (`'major'` | `'minor'`) pins which side of the home-page hero
+     the piece's image loops on — `major` = the larger/wide (left) panel,
+     `minor` = the smaller/narrow (right) panel. Unset pieces alternate. Wired
+     in `src/pages/index.astro` (the `panelSide` assignment).
    - There is **no `coverImage` field** — cover/gallery images are
      auto-discovered from the `src/assets/images/<slug>/` folder by slug
      match. If a project has no image folder, the card renders a blank

@@ -15,6 +15,7 @@ materials:
   - Boiled Linseed Oil
 dimensions: 16" × 8" × 7"
 heroImage: laurens-teabox-2.jpg
+heroSide: major
 ---
 
 

@@ -24,15 +24,22 @@ const sorted = allProjects.sort((a, b) => {
   return b.data.date.getTime() - a.data.date.getTime();
 });
 
+// Which panel a piece loops in. The LEFT panel is the "major" (wide) side and
+// the RIGHT is the "minor" (narrow) side. A piece's `heroSide` pins it there;
+// unset pieces alternate so both sides stay populated.
 const allImages = sorted
   .map((p, pi) => {
     const imgs = getAllImages(p.slug);
     if (imgs.length === 0) return null;
+    const panelSide =
+      p.data.heroSide === 'major' ? 0 :
+      p.data.heroSide === 'minor' ? 1 :
+      pi % 2;
     return {
       img: imgs[0],
       alt: p.data.coverAlt ?? p.data.title,
       slug: p.slug,
-      panelSide: pi % 2,
+      panelSide,
     };
   })
   .filter((x): x is { img: ImageMetadata; alt: string; slug: string; panelSide: number } => x !== null);
