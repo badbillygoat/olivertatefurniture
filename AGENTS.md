@@ -25,13 +25,15 @@ copy, and don't assume they'll debug anything themselves.
 
 ```
 npm run dev      # local dev server, http://localhost:4321
-npm run build    # production build to /dist (also runs astro check)
+npm run build    # production build to /dist (plain `astro build`, no type check)
 npm run preview  # serve the built /dist
+npx astro check  # TypeScript / .astro type check (not part of build)
 ```
 
 Run `npm run build` before considering any non-trivial change done — it
-catches broken content-collection schemas, bad image paths, and type errors
-that `dev` mode won't always surface.
+catches broken content-collection schemas, bad image paths, and the
+duplicate-folder check that `dev` mode skips. It does **not** type-check;
+run `npx astro check` separately when you've touched component scripts.
 
 ## Orientation map
 
@@ -46,10 +48,10 @@ that `dev` mode won't always surface.
 | `src/content/config.ts` | Zod schema for portfolio projects — **the source of truth** for what fields a project can have. Also defines the `glob` loader that reads `Projects/`, sets each entry's id to its folder name, and fails the build on a misplaced `.md` or duplicate folder name. |
 | `src/lib/projects.ts` | The only place that knows the folder layout: `getProjects({ includeArchived })`, `isArchived(project)`, `getProjectImages(project)`. Use these instead of `getCollection('projects')` or your own `import.meta.glob` so archived pieces can't leak onto public pages. |
 | `src/pages/index.astro` | Homepage — animated "zipper" bezier-curve hero built from SVG clip-paths, splitting project photos left/right. Non-trivial geometry code; read the comments before touching it. |
-| `src/components/ProjectGallery.astro` | Shared project grid with client-side category filter + a modal lightbox (desktop) / direct navigation (mobile, width > 900px is the breakpoint). Used by both the portfolio and archive pages. |
+| `src/components/ProjectGallery.astro` | Shared project grid with client-side category filter + a "Side-by-Side" pop-up (desktop) / direct navigation to the detail page (mobile; width > 900px opens the pop-up). Used by both the portfolio and archive pages. Pop-up photos are resized at build time with `getImage` (1600px stage, 200px thumbnails) and passed to the client script as `projectData`. |
 | `src/pages/portfolio/index.astro` | Portfolio page — renders `ProjectGallery` with Current Portfolio projects only. |
 | `src/pages/archive.astro` | **Unlinked** archive page (`/archive`) — every project, archived ones tagged "Archived". `noindex` via BaseLayout. Intentionally not linked from the header/footer/anywhere; don't add a link. |
-| `src/pages/portfolio/[slug].astro` | Individual project detail page with its own image gallery/carousel. |
+| `src/pages/portfolio/[slug].astro` | Individual project detail page — same "Side-by-Side" look as the pop-up (stacks on phones), with the markdown body rendered below it when present. |
 | `src/pages/about.astro` | Bio page. |
 | `src/pages/contact.astro` | Contact form — client-side validated, submits to **Formspree** (`https://formspree.io/f/xdawnyoo`). No server code in this repo. |
 | `public/logos/` | Brand SVG logos (regular + bold weight, black + white). |
@@ -85,12 +87,13 @@ that `dev` mode won't always surface.
      the piece's image loops on — `major` = the larger/wide (left) panel,
      `minor` = the smaller/narrow (right) panel. Unset pieces alternate. Wired
      in `src/pages/index.astro` (the `panelSide` assignment).
-   - There is **no `coverImage` field** — cover/gallery images are
-     auto-discovered from the `src/assets/images/<slug>/` folder by slug
-     match. If a project has no image folder, the card renders a blank
-     placeholder square instead of failing the build.
-3. Markdown body (optional) becomes the "long description" prose block on
-   the detail page.
+   - There is **no `coverImage` field** — photos are auto-discovered from
+     the project's own folder (`getProjectImages` in `src/lib/projects.ts`),
+     sorted by filename; the first is the cover. If a project has no photos,
+     the grid card renders a blank placeholder square and the detail page
+     shows only the details column, instead of failing the build.
+4. Markdown body (optional) is rendered as a prose block below the
+   photo/details frame on the detail page. It is not shown in the pop-up.
 
 ## Design system rules
 
@@ -111,6 +114,18 @@ since it's the kind of thing that gets tweaked without a doc update.
   `--font-sans` (Jost, body/UI text). Don't add a fourth.
 - Spacing follows an 8-pt scale (`--space-1` … `--space-24`); reuse these
   tokens instead of hardcoding pixel/rem values in component `<style>` blocks.
+- Translucent tints of the brown are allowed for subtle fills and hairlines
+  (e.g. `rgba(79, 65, 51, 0.045)` photo-stage wash, `0.26` spec-row rules,
+  `0.72` muted labels) — they're shades of the accent, not a third color.
+- **Project detail views use the "Side-by-Side" layout** (owner's choice,
+  Sept 2026): a 1px brown frame; a photo stage of **fixed size** with
+  photos fitted inside (`object-fit: contain`) so the frame never resizes
+  between tall and wide shots — the owner specifically disliked the old
+  resizing, so don't make the stage size follow the photo; square bordered
+  arrows; a thumbnail strip; and a details column split off by a 1px brown
+  line. The pop-up sits on a cream veil, not a dark overlay. The pop-up
+  (`ProjectGallery.astro`) and the detail page (`[slug].astro`) share this
+  look but not code — change both together.
 
 ## Etiquette for agents working in this repo
 

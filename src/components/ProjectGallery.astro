@@ -1,6 +1,7 @@
 ---
 // Project grid + category filter + modal lightbox. Shared by
 // /portfolio (current pieces only) and /archive (every piece).
+import { getImage } from 'astro:assets';
 import { getProjectImages, isArchived, type Project } from '../lib/projects';
 
 interface Props {
@@ -32,22 +33,34 @@ const categories = [
   ...[...new Set(projects.flatMap(p => parseCats(p.data.category)))].sort(),
 ];
 
-// Build project data for modal
+// Build project data for modal. Photos are resized at build time: a large
+// version for the main stage and a small one for the thumbnail strip, so the
+// modal never loads the multi-megabyte originals.
 const projectData = Object.fromEntries(
-  projects.map((p) => [
-    p.id,
-    {
-      title:       p.data.title,
-      description: p.data.description,
-      category:    parseCats(p.data.category).join(', '),
-      date:        p.data.date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-      materials:   p.data.materials ?? [],
-      dimensions:  p.data.dimensions ?? '',
-      duration:    p.data.duration ?? '',
-      available:   p.data.available,
-      images:      getProjectImages(p).map((img) => img.src),
-    },
-  ])
+  await Promise.all(
+    projects.map(async (p) => {
+      const imgs = getProjectImages(p);
+      const [large, small] = await Promise.all([
+        Promise.all(imgs.map((img) => getImage({ src: img, width: Math.min(img.width, 1600) }))),
+        Promise.all(imgs.map((img) => getImage({ src: img, width: Math.min(img.width, 200) }))),
+      ]);
+      return [
+        p.id,
+        {
+          title:       p.data.title,
+          description: p.data.description,
+          category:    parseCats(p.data.category).join(', '),
+          date:        p.data.date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+          materials:   p.data.materials ?? [],
+          dimensions:  p.data.dimensions ?? '',
+          duration:    p.data.duration ?? '',
+          available:   p.data.available,
+          images:      large.map((r) => r.src),
+          thumbs:      small.map((r) => r.src),
+        },
+      ];
+    })
+  )
 );
 ---
 
@@ -115,35 +128,34 @@ const projectData = Object.fromEntries(
     </div>
   </section>
 
-  <!-- Modal -->
-  <div class="modal-backdrop" id="modal-backdrop" aria-modal="true" role="dialog" aria-label="Project detail">
+  <!-- Modal — "Side-by-Side": fixed-size photo stage + thumbnails on the left,
+       details column on the right. The stage never changes size between
+       photos; each photo is fitted inside it. -->
+  <div class="modal-backdrop" id="modal-backdrop" aria-modal="true" role="dialog" aria-labelledby="modal-title">
     <div class="modal-panel" id="modal-panel">
-      <button class="modal-close" id="modal-close" aria-label="Close">&times;</button>
 
-      <!-- Gallery -->
-      <div class="modal-gallery" id="modal-gallery">
-        <img id="modal-img" src="" alt="" class="modal-img" />
+      <div class="modal-media">
+        <div class="modal-stage">
+          <img id="modal-img" src="" alt="" class="modal-img" />
+          <button type="button" class="modal-arrow modal-arrow--prev" id="modal-prev" aria-label="Previous photo">&#8249;</button>
+          <button type="button" class="modal-arrow modal-arrow--next" id="modal-next" aria-label="Next photo">&#8250;</button>
+        </div>
+        <div class="modal-thumbs" id="modal-thumbs"></div>
       </div>
 
-      <!-- Gallery nav bar (below image) -->
-      <div class="modal-nav" id="modal-nav">
-        <button class="modal-prev" id="modal-prev" aria-label="Previous image">&#8249;</button>
-        <div class="modal-counter" id="modal-counter"></div>
-        <button class="modal-next" id="modal-next" aria-label="Next image">&#8250;</button>
-      </div>
-
-      <!-- Info -->
-      <div class="modal-info" id="modal-info">
+      <div class="modal-side" id="modal-side">
+        <button type="button" class="modal-close" id="modal-close">Close <span aria-hidden="true">&times;</span></button>
         <span class="modal-category" id="modal-category"></span>
         <h2 class="modal-title" id="modal-title"></h2>
+        <div class="divider modal-divider"></div>
         <p class="modal-desc" id="modal-desc"></p>
-
         <dl class="modal-specs" id="modal-specs"></dl>
-
+        <span class="modal-counter" id="modal-counter"></span>
         <a href="/contact" class="btn btn-primary modal-cta" id="modal-cta" style="display:none;">
           Inquire about this piece
         </a>
       </div>
+
     </div>
   </div>
 
@@ -344,17 +356,19 @@ const projectData = Object.fromEntries(
   letter-spacing: 0.02em;
 }
 
-/* ── Modal ── */
+/* ── Modal (Side-by-Side) ── */
 .modal-backdrop {
   position: fixed;
   inset: 0;
   z-index: 200;
-  background: rgba(0, 0, 0, 0.72);
+  /* Softened cream veil — the portfolio stays faintly visible behind */
+  background: rgba(255, 255, 250, 0.84);
+  backdrop-filter: blur(3px);
   display: flex;
   align-items: flex-start;
   justify-content: center;
   overflow-y: auto;
-  padding: 5vh var(--space-4) var(--space-10);
+  padding: var(--space-8) var(--space-6);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
@@ -367,173 +381,235 @@ const projectData = Object.fromEntries(
 
 .modal-panel {
   position: relative;
-  background: rgba(79, 65, 51, 0.92);
-  border: none;
   width: 100%;
-  max-width: 760px;
+  max-width: 1010px;
   margin: auto;
+  background: var(--color-bg);
+  border: 1px solid var(--color-accent);
+  box-shadow: var(--shadow-lg);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
   transform: translateY(14px);
   transition: transform 0.3s ease;
-  overflow: hidden;
+}
+
+@media (max-width: 1100px) {
+  .modal-panel { grid-template-columns: minmax(0, 1fr) 300px; }
 }
 
 .modal-backdrop.is-open .modal-panel {
   transform: translateY(0);
 }
 
-/* Close button */
-.modal-close {
-  position: absolute;
-  top: var(--space-3);
-  right: var(--space-4);
-  z-index: 10;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 2rem;
-  line-height: 1;
-  color: var(--color-warm-white);
-  transition: color var(--transition-fast);
-  /* slight shadow so it reads over light images */
-  text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+/* Photo stage — fixed height, so it never resizes between tall and wide photos */
+.modal-media {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
-.modal-close:hover { color: var(--color-accent); }
-
-/* Gallery */
-.modal-gallery {
-  width: 100%;
-  background: transparent;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  /* Equal brown border on top + both sides (bottom is a little tighter, the
-     nav bar sits below). Fixed padding, so it holds for any image aspect ratio. */
-  padding: var(--space-5) var(--space-5) var(--space-3);
+/* Stage height is fixed per piece: it grows only if that piece's details
+   column is taller, never when moving between photos. */
+.modal-stage {
+  position: relative;
+  flex: 1 0 auto;
+  min-height: min(520px, 64vh);
+  background: rgba(79, 65, 51, 0.045);
 }
 
 .modal-img {
-  display: block;
-  max-width: 100%;
-  width: auto;
-  height: auto;
-  max-height: 65vh;
-  margin: 0 auto;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
+  padding: var(--space-8) var(--space-16);
+  transition: opacity 180ms ease;
 }
 
-/* Gallery nav bar */
-.modal-nav {
+.modal-img.is-swapping { opacity: 0; }
+
+.modal-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: var(--space-10);
+  height: var(--space-10);
+  display: grid;
+  place-items: center;
+  background: var(--color-bg);
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent);
+  font-size: var(--text-2xl);
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.modal-arrow:hover {
+  background: var(--color-accent);
+  color: var(--color-bg);
+}
+
+.modal-arrow--prev { left: var(--space-3); }
+.modal-arrow--next { right: var(--space-3); }
+
+/* Thumbnail strip — buttons are created in JS, hence :global */
+.modal-thumbs {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-4);
-  padding: var(--space-2) 0;
-  background: transparent;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--color-accent);
+  overflow-x: auto;
 }
 
-.modal-nav[hidden] { display: none; }
+.modal-thumbs :global(.modal-thumb) {
+  flex: none;
+  width: var(--space-16);
+  height: var(--space-12);
+  padding: 0;
+  background: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity var(--transition-fast);
+}
 
-.modal-prev,
-.modal-next {
+.modal-thumbs :global(.modal-thumb img) {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.modal-thumbs :global(.modal-thumb:hover) { opacity: 0.85; }
+
+.modal-thumbs :global(.modal-thumb[aria-current='true']) {
+  opacity: 1;
+  border-color: var(--color-accent);
+  padding: 2px;
+}
+
+/* One-photo pieces: no arrows, thumbnails or counter */
+.modal-panel.is-single .modal-arrow,
+.modal-panel.is-single .modal-thumbs,
+.modal-panel.is-single .modal-counter { display: none; }
+
+/* Details column */
+.modal-side {
+  border-left: 1px solid var(--color-accent);
+  padding: var(--space-5) var(--space-8) var(--space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.modal-close {
+  align-self: flex-end;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
   background: transparent;
   border: none;
   cursor: pointer;
-  color: var(--color-warm-white);
-  font-size: 2.2rem;
+  font-size: var(--text-xs);
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  transition: opacity var(--transition-fast);
+}
+
+.modal-close span {
+  font-size: var(--text-xl);
   line-height: 1;
-  padding: var(--space-1) var(--space-2);
-  transition: color var(--transition-fast), transform var(--transition-fast);
+  letter-spacing: 0;
 }
 
-.modal-prev:hover {
-  color: var(--color-warm-white);
-  transform: translateX(-2px);
-}
-.modal-next:hover {
-  color: var(--color-warm-white);
-  transform: translateX(2px);
-}
-
-.modal-counter {
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  font-weight: 300;
-  letter-spacing: 0.1em;
-  color: var(--color-warm-white);
-  min-width: 3ch;
-  text-align: center;
-}
-
-/* Info section */
-.modal-info {
-  padding: var(--space-6) var(--space-10) var(--space-8) var(--space-12);
-}
-
-@media (max-width: 600px) {
-  .modal-info { padding: var(--space-5) var(--space-12) var(--space-7) var(--space-16); }
-}
+.modal-close:hover { opacity: 0.6; }
 
 .modal-category {
   display: block;
   font-size: var(--text-xs);
-  font-weight: 500;
-  letter-spacing: 0.12em;
+  font-weight: 400;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--color-warm-white);
-  margin-block-end: var(--space-2);
+  color: var(--color-accent);
 }
 
 .modal-title {
-  font-size: var(--text-2xl);
-  font-weight: 600;
-  color: var(--color-warm-white);
-  line-height: var(--leading-snug);
-  margin: 0 0 var(--space-3);
+  font-size: var(--text-4xl);
+  font-weight: 300;
+  line-height: var(--leading-tight);
+  text-wrap: balance;
+  margin: 0;
 }
+
+.modal-divider { margin-block: var(--space-1); }
 
 .modal-desc {
   font-size: var(--text-base);
-  color: var(--color-warm-white);
   line-height: var(--leading-normal);
-  max-width: 62ch;
-  margin: 0 0 var(--space-5);
+  margin: 0;
 }
 
 .modal-specs {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  margin-top: var(--space-5);
-  margin-block-end: var(--space-5);
+  margin-top: var(--space-1);
 }
 
 .modal-specs:empty { display: none; }
 
-.modal-spec-row {
+.modal-specs :global(.modal-spec-row) {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+  padding-block: var(--space-3);
+  border-top: 1px solid rgba(79, 65, 51, 0.26);
 }
 
-/* :global needed — these elements are created dynamically in JS */
-:global(.modal-spec-row dt) {
+.modal-specs :global(dt) {
   font-size: var(--text-xs);
-  font-weight: 500;
-  letter-spacing: 0.08em;
+  font-weight: 400;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--color-warm-white);
+  color: rgba(79, 65, 51, 0.72);
 }
 
-:global(.modal-spec-row dd),
-:global(.modal-spec-row li) {
+.modal-specs :global(dd) {
   font-size: var(--text-sm);
-  color: var(--color-warm-white);
-  font-weight: 500;
+  font-weight: 400;
+  color: var(--color-accent);
+}
+
+.modal-specs :global(ul) {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.modal-specs :global(li::before) { content: '— '; }
+
+.modal-counter {
+  margin-top: auto;
+  padding-top: var(--space-3);
+  font-size: var(--text-xs);
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  color: rgba(79, 65, 51, 0.72);
 }
 
 .modal-cta {
-  margin-top: var(--space-4);
+  justify-content: center;
+  width: 100%;
+  margin-top: var(--space-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-backdrop, .modal-panel, .modal-img { transition: none; }
 }
 
 </style>
@@ -585,9 +661,9 @@ const backdrop  = document.getElementById('modal-backdrop');
 const panel     = document.getElementById('modal-panel');
 const closeBtn  = document.getElementById('modal-close');
 const modalImg  = document.getElementById('modal-img');
-const modalNav  = document.getElementById('modal-nav');
 const prevBtn   = document.getElementById('modal-prev');
 const nextBtn   = document.getElementById('modal-next');
+const thumbsEl  = document.getElementById('modal-thumbs');
 const counterEl = document.getElementById('modal-counter');
 const catEl     = document.getElementById('modal-category');
 const titleEl   = document.getElementById('modal-title');
@@ -598,14 +674,41 @@ const ctaEl     = document.getElementById('modal-cta');
 let currentImages = [];
 let currentIndex  = 0;
 
+// Fade the photo out, swap it, fade back in once the new one has loaded
+modalImg.addEventListener('load',  () => modalImg.classList.remove('is-swapping'));
+modalImg.addEventListener('error', () => modalImg.classList.remove('is-swapping'));
+
 function showImage(index) {
+  if (!currentImages.length) return;
   currentIndex = (index + currentImages.length) % currentImages.length;
-  modalImg.src = currentImages[currentIndex];
+
+  const src = currentImages[currentIndex];
+  if (modalImg.getAttribute('src') !== src) {
+    modalImg.classList.add('is-swapping');
+    modalImg.src = src;
+  }
   modalImg.alt = titleEl.textContent + ' — photo ' + (currentIndex + 1);
 
-  const many = currentImages.length > 1;
-  modalNav.hidden = !many;
-  counterEl.textContent = many ? (currentIndex + 1) + ' / ' + currentImages.length : '';
+  counterEl.textContent = 'Photo ' + (currentIndex + 1) + ' of ' + currentImages.length;
+  thumbsEl.querySelectorAll('.modal-thumb').forEach((t, k) => {
+    t.setAttribute('aria-current', String(k === currentIndex));
+  });
+}
+
+function buildThumbs(thumbs) {
+  thumbsEl.replaceChildren();
+  thumbs.forEach((src, k) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'modal-thumb';
+    btn.setAttribute('aria-label', 'Show photo ' + (k + 1));
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = '';
+    btn.appendChild(img);
+    btn.addEventListener('click', () => showImage(k));
+    thumbsEl.appendChild(btn);
+  });
 }
 
 function openModal(slug) {
@@ -625,40 +728,50 @@ function openModal(slug) {
 
   // Gallery
   currentImages = p.images;
+  panel.classList.toggle('is-single', p.images.length < 2);
+  buildThumbs(p.images.length > 1 ? p.thumbs : []);
   showImage(0);
 
   // Open
+  backdrop.scrollTop = 0;
   backdrop.classList.add('is-open');
   document.body.style.overflow = 'hidden';
-  closeBtn.focus();
+  // Move keyboard focus into the dialog without drawing a focus ring on open
+  closeBtn.focus({ focusVisible: false });
 }
 
 function closeModal() {
   backdrop.classList.remove('is-open');
   document.body.style.overflow = '';
-  modalImg.src = '';
+  modalImg.removeAttribute('src');
 }
 
 function buildSpecs(specsEl, p) {
-  specsEl.innerHTML = '';
-  const rows = [
-    { label: 'Date completed', value: p.date },
-    { label: 'Dimensions',     value: p.dimensions },
-    { label: 'Build time',     value: p.duration },
-  ];
-  rows.forEach(({ label, value }) => {
-    if (!value) return;
+  specsEl.replaceChildren();
+
+  function addRow(label, content) {
     const row = document.createElement('div');
     row.className = 'modal-spec-row';
-    row.innerHTML = '<dt>' + label + '</dt><dd>' + value + '</dd>';
+    const dt = document.createElement('dt');
+    dt.textContent = label;
+    const dd = document.createElement('dd');
+    if (typeof content === 'string') dd.textContent = content;
+    else dd.appendChild(content);
+    row.append(dt, dd);
     specsEl.appendChild(row);
-  });
+  }
+
+  if (p.date)       addRow('Date completed', p.date);
+  if (p.dimensions) addRow('Dimensions',     p.dimensions);
+  if (p.duration)   addRow('Build time',     p.duration);
   if (p.materials && p.materials.length) {
-    const row = document.createElement('div');
-    row.className = 'modal-spec-row';
-    const items = p.materials.map(m => '<li>— ' + m + '</li>').join('');
-    row.innerHTML = '<dt>Materials</dt><dd><ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:2px">' + items + '</ul></dd>';
-    specsEl.appendChild(row);
+    const ul = document.createElement('ul');
+    p.materials.forEach((m) => {
+      const li = document.createElement('li');
+      li.textContent = m;
+      ul.appendChild(li);
+    });
+    addRow('Materials', ul);
   }
 }
 
