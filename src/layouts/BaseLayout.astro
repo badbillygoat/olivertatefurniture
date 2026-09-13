@@ -13,6 +13,8 @@ interface Props {
   hideFooter?: boolean;
   /** When true: use title as-is, without appending site name */
   rawTitle?: boolean;
+  /** When true: ask search engines not to index this page */
+  noindex?: boolean;
 }
 
 const {
@@ -22,6 +24,7 @@ const {
   heroLayout = false,
   hideFooter = false,
   rawTitle = false,
+  noindex = false,
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin);
@@ -36,6 +39,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin)
     <title>{rawTitle ? title : `${title} | Oliver Tate Furniture`}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalURL} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
 
     <meta property="og:title"       content={`${title} | Oliver Tate Furniture`} />
     <meta property="og:description" content={description} />

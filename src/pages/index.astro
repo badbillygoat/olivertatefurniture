@@ -4,7 +4,7 @@ import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 
-const allProjects = await getCollection('projects');
+const allProjects = await getCollection('projects', (p) => !p.data.archived);
 
 const imageModules = import.meta.glob<{ default: ImageMetadata }>(
   '/src/assets/images/**/*.{jpg,jpeg,png,webp,avif,gif}',

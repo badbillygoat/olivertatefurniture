@@ -1,0 +1,22 @@
+---
+// Unlinked archive page — reachable only by typing /archive. Shows every
+// project, including ones marked "archived: Y". Hidden from search engines.
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ProjectGallery from '../components/ProjectGallery.astro';
+
+const projects = await getCollection('projects');
+---
+
+<BaseLayout
+  title="Archive"
+  description="The complete archive of work by Oliver Tate Furniture."
+  noindex
+>
+  <ProjectGallery
+    projects={projects}
+    heading="Archive"
+    intro="A complete record of work, including past pieces no longer shown in the portfolio."
+    showArchivedTag
+  />
+</BaseLayout>

@@ -7,6 +7,7 @@ coverAlt: Evolution of foot stool one with improved proportions.
 category: Kitchen
 featured: false
 available: false
+archived: N
 materials:
   - Maple
   - Walnut Burl

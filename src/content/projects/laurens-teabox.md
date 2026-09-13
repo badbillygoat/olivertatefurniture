@@ -7,6 +7,7 @@ coverAlt: Tea & Coffee Box
 category: Storage, Kitchen
 featured: false
 available: false
+archived: N
 materials:
   - Padauk
   - Steambent Mulberry

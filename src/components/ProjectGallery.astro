@@ -1,0 +1,720 @@
+---
+// Project grid + category filter + modal lightbox. Shared by
+// /portfolio (current pieces only) and /archive (every piece).
+import type { ImageMetadata } from 'astro';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  projects: CollectionEntry<'projects'>[];
+  heading: string;
+  intro: string;
+  /** When true: cards for archived pieces get an "Archived" tag */
+  showArchivedTag?: boolean;
+}
+
+const { heading, intro, showArchivedTag = false } = Astro.props;
+
+// Sort: explicit "order" number first (ascending), then by date (newest first)
+const projects = [...Astro.props.projects].sort((a, b) => {
+  const ao = a.data.order ?? Infinity;
+  const bo = b.data.order ?? Infinity;
+  if (ao !== bo) return ao - bo;
+  return b.data.date.getTime() - a.data.date.getTime();
+});
+
+const imageModules = import.meta.glob<{ default: ImageMetadata }>(
+  '/src/assets/images/**/*.{jpg,jpeg,png,webp,avif,gif}',
+  { eager: true }
+);
+
+function getCoverImage(slug: string): ImageMetadata | null {
+  const entries = Object.entries(imageModules)
+    .filter(([path]) => path.startsWith(`/src/assets/images/${slug}/`))
+    .sort(([a], [b]) => a.localeCompare(b));
+  return entries[0]?.[1]?.default ?? null;
+}
+
+function getProjectImages(slug: string): string[] {
+  return Object.entries(imageModules)
+    .filter(([path]) => path.startsWith(`/src/assets/images/${slug}/`))
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([, mod]) => mod.default.src);
+}
+
+// Parse comma-separated categories from each project
+function parseCats(raw: string): string[] {
+  return raw.split(',').map(c => c.trim()).filter(Boolean);
+}
+
+// Build filter list from all unique categories across all projects
+const categories = [
+  'all',
+  ...[...new Set(projects.flatMap(p => parseCats(p.data.category)))].sort(),
+];
+
+// Build project data for modal
+const projectData = Object.fromEntries(
+  projects.map((p) => [
+    p.slug,
+    {
+      title:       p.data.title,
+      description: p.data.description,
+      category:    parseCats(p.data.category).join(', '),
+      date:        p.data.date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+      materials:   p.data.materials ?? [],
+      dimensions:  p.data.dimensions ?? '',
+      duration:    p.data.duration ?? '',
+      available:   p.data.available,
+      images:      getProjectImages(p.slug),
+    },
+  ])
+);
+---
+
+  <section class="portfolio-hero section">
+    <div class="container">
+      <span class="section-label">Work</span>
+      <h1 class="section-heading">{heading}</h1>
+      <p class="hero-desc">{intro}</p>
+      <div class="divider"></div>
+    </div>
+  </section>
+
+  <section class="portfolio-grid-section">
+    <div class="container">
+
+      <!-- Filter tabs -->
+      <div class="filter-bar" role="tablist" aria-label="Filter by category">
+        {categories.map((cat) => (
+          <button
+            class="filter-btn"
+            role="tab"
+            data-category={cat}
+            aria-selected={cat === 'all' ? 'true' : 'false'}
+          >
+            {cat.charAt(0).toUpperCase() + cat.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      <!-- Grid -->
+      <ul class="project-grid" role="list">
+        {projects.map((project) => (
+          <li class="project-card" data-categories={JSON.stringify(parseCats(project.data.category))} data-slug={project.slug}>
+            <a href={`/portfolio/${project.slug}`} class="card-link">
+              <div class="card-image-wrap">
+                {(() => {
+                  const img = getCoverImage(project.slug);
+                  return img
+                    ? <img src={img.src} alt={project.data.coverAlt ?? project.data.title} loading="lazy" decoding="async" class="card-image" />
+                    : <div class="card-image card-no-image" aria-hidden="true" />;
+                })()}
+                {project.data.featured && (
+                  <span class="card-badge">Featured</span>
+                )}
+                {showArchivedTag && project.data.archived && (
+                  <span class="card-badge card-badge--archived">Archived</span>
+                )}
+              </div>
+              <div class="card-body">
+                <span class="card-category">{parseCats(project.data.category).join(', ')}</span>
+                <h2 class="card-title">{project.data.title}</h2>
+                <p class="card-desc">{project.data.description}</p>
+                <div class="card-footer">
+                  <span class="card-cta">View project &rarr;</span>
+                  {project.data.available && (
+                    <span class="card-badge--available">Available</span>
+                  )}
+                </div>
+              </div>
+            </a>
+          </li>
+        ))}
+      </ul>
+
+    </div>
+  </section>
+
+  <!-- Modal -->
+  <div class="modal-backdrop" id="modal-backdrop" aria-modal="true" role="dialog" aria-label="Project detail">
+    <div class="modal-panel" id="modal-panel">
+      <button class="modal-close" id="modal-close" aria-label="Close">&times;</button>
+
+      <!-- Gallery -->
+      <div class="modal-gallery" id="modal-gallery">
+        <img id="modal-img" src="" alt="" class="modal-img" />
+      </div>
+
+      <!-- Gallery nav bar (below image) -->
+      <div class="modal-nav" id="modal-nav">
+        <button class="modal-prev" id="modal-prev" aria-label="Previous image">&#8249;</button>
+        <div class="modal-counter" id="modal-counter"></div>
+        <button class="modal-next" id="modal-next" aria-label="Next image">&#8250;</button>
+      </div>
+
+      <!-- Info -->
+      <div class="modal-info" id="modal-info">
+        <span class="modal-category" id="modal-category"></span>
+        <h2 class="modal-title" id="modal-title"></h2>
+        <p class="modal-desc" id="modal-desc"></p>
+
+        <dl class="modal-specs" id="modal-specs"></dl>
+
+        <a href="/contact" class="btn btn-primary modal-cta" id="modal-cta" style="display:none;">
+          Inquire about this piece
+        </a>
+      </div>
+    </div>
+  </div>
+
+<style>
+.portfolio-hero {
+  padding-block-end: var(--space-8);
+}
+
+.hero-desc {
+  font-size: var(--text-lg);
+  color: var(--color-text-muted);
+  max-width: 52ch;
+}
+
+/* Filter bar */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-block-end: var(--space-10);
+}
+
+.filter-btn {
+  padding: var(--space-2) var(--space-5);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: transparent;
+  border: 1.5px solid var(--color-border-dark);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: background-color var(--transition-fast),
+              color var(--transition-fast),
+              border-color var(--transition-fast);
+}
+
+.filter-btn[aria-selected='true'],
+.filter-btn:hover {
+  background-color: var(--color-wood);
+  border-color: var(--color-wood);
+  color: var(--color-warm-white);
+}
+
+/* Grid */
+.project-grid {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-8);
+  padding-block-end: var(--space-16);
+}
+
+@media (min-width: 640px) {
+  .project-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 1024px) {
+  .project-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* Card */
+.project-card {
+  background: var(--color-warm-white);
+  border: 1px solid var(--color-border-dark);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-base), transform var(--transition-base);
+}
+
+.project-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-3px);
+}
+
+.project-card[data-hidden] { display: none; }
+
+.card-link {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.card-image-wrap {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background-color: var(--color-surface);
+}
+
+.card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-slow);
+}
+
+.card-no-image {
+  background-color: var(--color-accent);
+  opacity: 0.15;
+}
+
+.project-card:hover .card-image {
+  transform: scale(1.04);
+}
+
+.card-badge {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  padding: var(--space-1) var(--space-3);
+  background-color: var(--color-wood);
+  color: var(--color-warm-white);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: var(--radius-sm);
+}
+
+/* Sits top-left so it never overlaps the top-right "Featured" badge */
+.card-badge--archived {
+  right: auto;
+  left: var(--space-3);
+}
+
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-2);
+}
+
+.card-footer .card-cta { margin-top: 0; }
+
+.card-badge--available {
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  padding: var(--space-1) var(--space-3);
+}
+
+.card-body {
+  padding: var(--space-5) var(--space-6) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1;
+}
+
+.card-category {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-wood);
+}
+
+.card-title {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--color-charcoal);
+  line-height: var(--leading-snug);
+  margin: 0;
+}
+
+.card-desc {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  line-height: var(--leading-normal);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: none;
+  margin: 0;
+  flex: 1;
+}
+
+.card-cta {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-wood);
+  margin-top: var(--space-2);
+  transition: letter-spacing var(--transition-fast);
+}
+
+.project-card:hover .card-cta {
+  letter-spacing: 0.02em;
+}
+
+/* ── Modal ── */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.72);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 5vh var(--space-4) var(--space-10);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.modal-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-panel {
+  position: relative;
+  background: rgba(79, 65, 51, 0.92);
+  border: none;
+  width: 100%;
+  max-width: 760px;
+  margin: auto;
+  transform: translateY(14px);
+  transition: transform 0.3s ease;
+  overflow: hidden;
+}
+
+.modal-backdrop.is-open .modal-panel {
+  transform: translateY(0);
+}
+
+/* Close button */
+.modal-close {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-4);
+  z-index: 10;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 2rem;
+  line-height: 1;
+  color: var(--color-warm-white);
+  transition: color var(--transition-fast);
+  /* slight shadow so it reads over light images */
+  text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+}
+
+.modal-close:hover { color: var(--color-accent); }
+
+/* Gallery */
+.modal-gallery {
+  width: 100%;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Equal brown border on top + both sides (bottom is a little tighter, the
+     nav bar sits below). Fixed padding, so it holds for any image aspect ratio. */
+  padding: var(--space-5) var(--space-5) var(--space-3);
+}
+
+.modal-img {
+  display: block;
+  max-width: 100%;
+  width: auto;
+  height: auto;
+  max-height: 65vh;
+  margin: 0 auto;
+  object-fit: contain;
+}
+
+/* Gallery nav bar */
+.modal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-2) 0;
+  background: transparent;
+}
+
+.modal-nav[hidden] { display: none; }
+
+.modal-prev,
+.modal-next {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--color-warm-white);
+  font-size: 2.2rem;
+  line-height: 1;
+  padding: var(--space-1) var(--space-2);
+  transition: color var(--transition-fast), transform var(--transition-fast);
+}
+
+.modal-prev:hover {
+  color: var(--color-warm-white);
+  transform: translateX(-2px);
+}
+.modal-next:hover {
+  color: var(--color-warm-white);
+  transform: translateX(2px);
+}
+
+.modal-counter {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 300;
+  letter-spacing: 0.1em;
+  color: var(--color-warm-white);
+  min-width: 3ch;
+  text-align: center;
+}
+
+/* Info section */
+.modal-info {
+  padding: var(--space-6) var(--space-10) var(--space-8) var(--space-12);
+}
+
+@media (max-width: 600px) {
+  .modal-info { padding: var(--space-5) var(--space-12) var(--space-7) var(--space-16); }
+}
+
+.modal-category {
+  display: block;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-warm-white);
+  margin-block-end: var(--space-2);
+}
+
+.modal-title {
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  color: var(--color-warm-white);
+  line-height: var(--leading-snug);
+  margin: 0 0 var(--space-3);
+}
+
+.modal-desc {
+  font-size: var(--text-base);
+  color: var(--color-warm-white);
+  line-height: var(--leading-normal);
+  max-width: 62ch;
+  margin: 0 0 var(--space-5);
+}
+
+.modal-specs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+  margin-block-end: var(--space-5);
+}
+
+.modal-specs:empty { display: none; }
+
+.modal-spec-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/* :global needed — these elements are created dynamically in JS */
+:global(.modal-spec-row dt) {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-warm-white);
+}
+
+:global(.modal-spec-row dd),
+:global(.modal-spec-row li) {
+  font-size: var(--text-sm);
+  color: var(--color-warm-white);
+  font-weight: 500;
+}
+
+.modal-cta {
+  margin-top: var(--space-4);
+}
+
+</style>
+
+<script define:vars={{ projectData }}>
+// ── Filter ──────────────────────────────────────────────────────────────
+const filterBtns = document.querySelectorAll('.filter-btn');
+const cards      = document.querySelectorAll('.project-card');
+const allBtn     = document.querySelector('.filter-btn[data-category="all"]');
+
+const selected = new Set();
+
+function applyFilter() {
+  cards.forEach((card) => {
+    const cardCats = JSON.parse(card.dataset.categories ?? '[]');
+    const match = selected.size === 0 || cardCats.some(c => selected.has(c));
+    card.toggleAttribute('data-hidden', !match);
+  });
+}
+
+filterBtns.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const cat = btn.dataset.category ?? 'all';
+
+    if (cat === 'all') {
+      selected.clear();
+      filterBtns.forEach(b => b.setAttribute('aria-selected', 'false'));
+      allBtn?.setAttribute('aria-selected', 'true');
+    } else {
+      allBtn?.setAttribute('aria-selected', 'false');
+      if (selected.has(cat)) {
+        selected.delete(cat);
+        btn.setAttribute('aria-selected', 'false');
+      } else {
+        selected.add(cat);
+        btn.setAttribute('aria-selected', 'true');
+      }
+      if (selected.size === 0) {
+        allBtn?.setAttribute('aria-selected', 'true');
+      }
+    }
+
+    applyFilter();
+  });
+});
+
+// ── Modal ────────────────────────────────────────────────────────────────
+const backdrop  = document.getElementById('modal-backdrop');
+const panel     = document.getElementById('modal-panel');
+const closeBtn  = document.getElementById('modal-close');
+const modalImg  = document.getElementById('modal-img');
+const modalNav  = document.getElementById('modal-nav');
+const prevBtn   = document.getElementById('modal-prev');
+const nextBtn   = document.getElementById('modal-next');
+const counterEl = document.getElementById('modal-counter');
+const catEl     = document.getElementById('modal-category');
+const titleEl   = document.getElementById('modal-title');
+const descEl    = document.getElementById('modal-desc');
+const specsEl   = document.getElementById('modal-specs');
+const ctaEl     = document.getElementById('modal-cta');
+
+let currentImages = [];
+let currentIndex  = 0;
+
+function showImage(index) {
+  currentIndex = (index + currentImages.length) % currentImages.length;
+  modalImg.src = currentImages[currentIndex];
+  modalImg.alt = titleEl.textContent + ' — photo ' + (currentIndex + 1);
+
+  const many = currentImages.length > 1;
+  modalNav.hidden = !many;
+  counterEl.textContent = many ? (currentIndex + 1) + ' / ' + currentImages.length : '';
+}
+
+function openModal(slug) {
+  const p = projectData[slug];
+  if (!p) return;
+
+  // Populate info
+  catEl.textContent   = p.category;
+  titleEl.textContent = p.title;
+  descEl.textContent  = p.description;
+
+  // Build specs
+  buildSpecs(specsEl, p);
+
+  // CTA
+  ctaEl.style.display = p.available ? '' : 'none';
+
+  // Gallery
+  currentImages = p.images;
+  showImage(0);
+
+  // Open
+  backdrop.classList.add('is-open');
+  document.body.style.overflow = 'hidden';
+  closeBtn.focus();
+}
+
+function closeModal() {
+  backdrop.classList.remove('is-open');
+  document.body.style.overflow = '';
+  modalImg.src = '';
+}
+
+function buildSpecs(specsEl, p) {
+  specsEl.innerHTML = '';
+  const rows = [
+    { label: 'Date completed', value: p.date },
+    { label: 'Dimensions',     value: p.dimensions },
+    { label: 'Build time',     value: p.duration },
+  ];
+  rows.forEach(({ label, value }) => {
+    if (!value) return;
+    const row = document.createElement('div');
+    row.className = 'modal-spec-row';
+    row.innerHTML = '<dt>' + label + '</dt><dd>' + value + '</dd>';
+    specsEl.appendChild(row);
+  });
+  if (p.materials && p.materials.length) {
+    const row = document.createElement('div');
+    row.className = 'modal-spec-row';
+    const items = p.materials.map(m => '<li>— ' + m + '</li>').join('');
+    row.innerHTML = '<dt>Materials</dt><dd><ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:2px">' + items + '</ul></dd>';
+    specsEl.appendChild(row);
+  }
+}
+
+// Card click interception — modal on desktop, navigate on mobile
+cards.forEach((card) => {
+  const link = card.querySelector('.card-link');
+  if (!link) return;
+  link.addEventListener('click', (e) => {
+    // Mobile: navigate to detail page normally
+    // Desktop: open modal
+    if (window.innerWidth > 900) {
+      e.preventDefault();
+      openModal(card.dataset.slug);
+    }
+  });
+});
+
+prevBtn.addEventListener('click', () => showImage(currentIndex - 1));
+nextBtn.addEventListener('click', () => showImage(currentIndex + 1));
+closeBtn.addEventListener('click', closeModal);
+
+backdrop.addEventListener('click', (e) => {
+  if (!panel.contains(e.target)) closeModal();
+});
+
+document.addEventListener('keydown', (e) => {
+  if (!backdrop.classList.contains('is-open')) return;
+  if (e.key === 'Escape') closeModal();
+  if (e.key === 'ArrowLeft')  showImage(currentIndex - 1);
+  if (e.key === 'ArrowRight') showImage(currentIndex + 1);
+});
+
+// Open modal from hero link (e.g. /portfolio#bubinga-maple-tray)
+const hash = window.location.hash.slice(1);
+if (hash && projectData[hash] && window.innerWidth > 900) {
+  openModal(hash);
+}
+history.replaceState(null, '', window.location.pathname);
+</script>

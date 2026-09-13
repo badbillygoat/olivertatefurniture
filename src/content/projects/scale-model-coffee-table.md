@@ -7,6 +7,7 @@ coverAlt: Scale model coffee table with sunburst veneer and arched white oak bas
 category: Tables
 featured: false
 available: false
+archived: N
 materials:
   - Padauk
   - White Oak

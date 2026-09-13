@@ -7,6 +7,7 @@ coverAlt: Spalted maple serving tray with brushed nickel handles
 category: Kitchen, Decor
 featured: false
 available: false
+archived: N
 materials:
   - Spalted Maple
   - Brushed Nickle

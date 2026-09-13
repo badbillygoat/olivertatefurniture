@@ -18,6 +18,11 @@ const projects = defineCollection({
     category:    z.string(),
     featured:    z.boolean().default(false),
     available:   z.boolean().default(false),
+    // archived: Y = hide from the home page and portfolio (still shown on the
+    // unlinked /archive page). N (or omitted) = shown normally.
+    archived:    z.union([z.boolean(), z.enum(['Y', 'N', 'y', 'n'])])
+                   .default('N')
+                   .transform((v) => v === true || v === 'Y' || v === 'y'),
     // Add "order: 1" (lower = first) to any .md file to control portfolio sort order.
     // Pieces without an order number sort after ordered pieces, then by date.
     order:       z.number().optional(),

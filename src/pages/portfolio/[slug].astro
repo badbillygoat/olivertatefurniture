@@ -74,7 +74,7 @@ const dateStr = project.data.date.toLocaleDateString('en-US', {
     <div class="container detail-body">
 
       <!-- Back link -->
-      <a href="/portfolio" class="back-link">&larr; All projects</a>
+      <a href={project.data.archived ? '/archive' : '/portfolio'} class="back-link">&larr; All projects</a>
 
       <div class="detail-layout">
 

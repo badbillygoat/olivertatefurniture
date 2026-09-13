@@ -38,14 +38,16 @@ that `dev` mode won't always surface.
 | Path | What it is |
 |---|---|
 | `src/styles/global.css` | The entire design system: CSS custom properties, reset, typography, buttons, `.section`/`.container` utilities. Start here before writing new component styles. |
-| `src/layouts/BaseLayout.astro` | Root `<html>` shell — head/meta/OG tags, Google Analytics, Header + Footer, `heroLayout`/`hideFooter`/`rawTitle` props. |
+| `src/layouts/BaseLayout.astro` | Root `<html>` shell — head/meta/OG tags, Google Analytics, Header + Footer, `heroLayout`/`hideFooter`/`rawTitle`/`noindex` props. |
 | `src/components/Header.astro` | Sticky nav. Has a transparent/overlay mode (`transparent` prop) used only on the homepage hero, with scroll-triggered solid background. |
 | `src/components/Footer.astro` | Dark footer, nav links. |
 | `src/content/config.ts` | Zod schema for portfolio projects — **the source of truth** for what fields a project can have. |
 | `src/content/projects/*.md` | One markdown file per portfolio piece. Frontmatter = data, body = optional long-form description rendered on the detail page. |
 | `src/assets/images/<slug>/` | Photos for the project whose content file is `<slug>.md`. Folder name must exactly match the content collection slug (the filename minus `.md`). |
 | `src/pages/index.astro` | Homepage — animated "zipper" bezier-curve hero built from SVG clip-paths, splitting project photos left/right. Non-trivial geometry code; read the comments before touching it. |
-| `src/pages/portfolio/index.astro` | Portfolio grid with client-side category filter + a modal lightbox (desktop) / direct navigation (mobile, width > 900px is the breakpoint). |
+| `src/components/ProjectGallery.astro` | Shared project grid with client-side category filter + a modal lightbox (desktop) / direct navigation (mobile, width > 900px is the breakpoint). Used by both the portfolio and archive pages. |
+| `src/pages/portfolio/index.astro` | Portfolio page — renders `ProjectGallery` with non-archived projects only. |
+| `src/pages/archive.astro` | **Unlinked** archive page (`/archive`) — every project, archived ones tagged "Archived". `noindex` via BaseLayout. Intentionally not linked from the header/footer/anywhere; don't add a link. |
 | `src/pages/portfolio/[slug].astro` | Individual project detail page with its own image gallery/carousel. |
 | `src/pages/about.astro` | Bio page. |
 | `src/pages/contact.astro` | Contact form — client-side validated, submits to **Formspree** (`https://formspree.io/f/xdawnyoo`). No server code in this repo. |
@@ -61,7 +63,12 @@ that `dev` mode won't always surface.
    `src/content/config.ts`:
    - Required: `title`, `description`, `date`, `category`
    - Optional: `coverAlt`, `heroImage`, `heroSide`, `featured`, `available`,
-     `order`, `materials[]`, `dimensions`, `duration`
+     `archived`, `order`, `materials[]`, `dimensions`, `duration`
+   - `archived` (`Y` | `N`, also accepts true/false; default `N`) — `Y` hides
+     the piece from the homepage hero and `/portfolio`; it still appears on
+     `/archive`, and its `/portfolio/<slug>` detail page still builds (its
+     back link points to `/archive`). Any page that lists projects publicly
+     must filter with `getCollection('projects', (p) => !p.data.archived)`.
    - `category` can be a comma-separated list (e.g. `Tables, Decor`) — the
      portfolio filter bar derives its tabs from whatever categories exist
      across all projects, so no separate enum to update.
