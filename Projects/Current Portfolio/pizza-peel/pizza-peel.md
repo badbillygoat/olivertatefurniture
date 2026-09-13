@@ -7,7 +7,6 @@ coverAlt: Wooden pizza peel with colorful woods.
 category: Kitchen
 featured: false
 available: false
-archived: N
 materials:
   - Wenge
   - Purple Heart

@@ -41,12 +41,13 @@ that `dev` mode won't always surface.
 | `src/layouts/BaseLayout.astro` | Root `<html>` shell — head/meta/OG tags, Google Analytics, Header + Footer, `heroLayout`/`hideFooter`/`rawTitle`/`noindex` props. |
 | `src/components/Header.astro` | Sticky nav. Has a transparent/overlay mode (`transparent` prop) used only on the homepage hero, with scroll-triggered solid background. |
 | `src/components/Footer.astro` | Dark footer, nav links. |
-| `src/content/config.ts` | Zod schema for portfolio projects — **the source of truth** for what fields a project can have. |
-| `src/content/projects/*.md` | One markdown file per portfolio piece. Frontmatter = data, body = optional long-form description rendered on the detail page. |
-| `src/assets/images/<slug>/` | Photos for the project whose content file is `<slug>.md`. Folder name must exactly match the content collection slug (the filename minus `.md`). |
+| `Projects/Current Portfolio/<slug>/` | One folder per live portfolio piece: its `.md` file + all its photos. Shown on the homepage, `/portfolio`, and `/archive`. |
+| `Projects/Archive/<slug>/` | Same layout, for archived pieces — shown only on `/archive`. **Folder location is the only archive switch** (there is no `archived` frontmatter field). |
+| `src/content/config.ts` | Zod schema for portfolio projects — **the source of truth** for what fields a project can have. Also defines the `glob` loader that reads `Projects/`, sets each entry's id to its folder name, and fails the build on a misplaced `.md` or duplicate folder name. |
+| `src/lib/projects.ts` | The only place that knows the folder layout: `getProjects({ includeArchived })`, `isArchived(project)`, `getProjectImages(project)`. Use these instead of `getCollection('projects')` or your own `import.meta.glob` so archived pieces can't leak onto public pages. |
 | `src/pages/index.astro` | Homepage — animated "zipper" bezier-curve hero built from SVG clip-paths, splitting project photos left/right. Non-trivial geometry code; read the comments before touching it. |
 | `src/components/ProjectGallery.astro` | Shared project grid with client-side category filter + a modal lightbox (desktop) / direct navigation (mobile, width > 900px is the breakpoint). Used by both the portfolio and archive pages. |
-| `src/pages/portfolio/index.astro` | Portfolio page — renders `ProjectGallery` with non-archived projects only. |
+| `src/pages/portfolio/index.astro` | Portfolio page — renders `ProjectGallery` with Current Portfolio projects only. |
 | `src/pages/archive.astro` | **Unlinked** archive page (`/archive`) — every project, archived ones tagged "Archived". `noindex` via BaseLayout. Intentionally not linked from the header/footer/anywhere; don't add a link. |
 | `src/pages/portfolio/[slug].astro` | Individual project detail page with its own image gallery/carousel. |
 | `src/pages/about.astro` | Bio page. |
@@ -56,19 +57,27 @@ that `dev` mode won't always surface.
 
 ## Content model — adding/editing a portfolio project
 
-1. Add photos to `src/assets/images/<slug>/`, named so the desired cover
-   image sorts first alphabetically (e.g. `<slug>-1.jpg`, `-2.jpg`, ...), or
-   set `order`/rely on filename sort as needed.
-2. Add `src/content/projects/<slug>.md` with frontmatter per
+1. Create a folder `Projects/Current Portfolio/<slug>/`. The folder name
+   **is** the URL (`/portfolio/<slug>`) — lowercase-with-hyphens, and must be
+   unique across both `Current Portfolio` and `Archive`.
+2. Put the photos in that folder, named so the desired cover image sorts
+   first alphabetically (e.g. `<slug>-1.jpg`, `-2.jpg`, ...). Extensions
+   picked up: jpg/jpeg/png/webp/avif/gif (plus upper-case JPG/JPEG/PNG/WEBP).
+3. Put exactly one `.md` file in that folder (conventionally `<slug>.md`;
+   the filename itself doesn't matter) with frontmatter per
    `src/content/config.ts`:
    - Required: `title`, `description`, `date`, `category`
    - Optional: `coverAlt`, `heroImage`, `heroSide`, `featured`, `available`,
-     `archived`, `order`, `materials[]`, `dimensions`, `duration`
-   - `archived` (`Y` | `N`, also accepts true/false; default `N`) — `Y` hides
-     the piece from the homepage hero and `/portfolio`; it still appears on
-     `/archive`, and its `/portfolio/<slug>` detail page still builds (its
-     back link points to `/archive`). Any page that lists projects publicly
-     must filter with `getCollection('projects', (p) => !p.data.archived)`.
+     `order`, `materials[]`, `dimensions`, `duration`
+   - **Archiving** = moving the whole project folder from
+     `Projects/Current Portfolio/` to `Projects/Archive/` (and back to
+     un-archive). The URL doesn't change. Archived pieces drop off the
+     homepage hero and `/portfolio`, stay on `/archive` with an "Archived"
+     tag, and keep their detail page (back link points to `/archive`).
+   - The build fails with a readable message if a `.md` sits anywhere other
+     than `Projects/<Current Portfolio|Archive>/<slug>/`, or if two folders
+     share a name. The duplicate check is skipped in `npm run dev` (it would
+     false-positive while folders are being moved), so run `npm run build`.
    - `category` can be a comma-separated list (e.g. `Tables, Decor`) — the
      portfolio filter bar derives its tabs from whatever categories exist
      across all projects, so no separate enum to update.

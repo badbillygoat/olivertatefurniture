@@ -7,7 +7,6 @@ coverAlt: Wooden pizza peel with colorful woods.
 category: Kitchen, Decor
 featured: false
 available: false
-archived: N
 materials:
   - Walnut (hand carved handles)
   - Spalted Maple

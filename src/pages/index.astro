@@ -1,22 +1,11 @@
 ---
 import type { ImageMetadata } from 'astro';
 import { Image } from 'astro:assets';
-import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { getProjects, getProjectImages } from '../lib/projects';
 
-const allProjects = await getCollection('projects', (p) => !p.data.archived);
-
-const imageModules = import.meta.glob<{ default: ImageMetadata }>(
-  '/src/assets/images/**/*.{jpg,jpeg,png,webp,avif,gif}',
-  { eager: true }
-);
-
-function getAllImages(slug: string): ImageMetadata[] {
-  return Object.entries(imageModules)
-    .filter(([path]) => path.startsWith(`/src/assets/images/${slug}/`))
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([, mod]) => mod.default);
-}
+// Current Portfolio projects only — archived ones never appear on the homepage.
+const allProjects = await getProjects();
 
 const sorted = allProjects.sort((a, b) => {
   if (a.data.featured && !b.data.featured) return -1;
@@ -29,7 +18,7 @@ const sorted = allProjects.sort((a, b) => {
 // unset pieces alternate so both sides stay populated.
 const allImages = sorted
   .map((p, pi) => {
-    const imgs = getAllImages(p.slug);
+    const imgs = getProjectImages(p);
     if (imgs.length === 0) return null;
     const panelSide =
       p.data.heroSide === 'major' ? 0 :
@@ -38,7 +27,7 @@ const allImages = sorted
     return {
       img: imgs[0],
       alt: p.data.coverAlt ?? p.data.title,
-      slug: p.slug,
+      slug: p.id,
       panelSide,
     };
   })

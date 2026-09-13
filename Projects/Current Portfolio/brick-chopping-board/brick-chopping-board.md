@@ -7,7 +7,6 @@ coverAlt: End grain chopping block with a brick and mortar pattern
 category: Kitchen
 featured: false
 available: false
-archived: N
 materials:
   - Maple
   - Cherry

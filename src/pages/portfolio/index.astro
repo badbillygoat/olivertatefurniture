@@ -1,10 +1,10 @@
 ---
-import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ProjectGallery from '../../components/ProjectGallery.astro';
+import { getProjects } from '../../lib/projects';
 
-// Archived pieces (archived: Y) are left out here — they only appear on /archive.
-const projects = await getCollection('projects', (p) => !p.data.archived);
+// Only projects in Projects/Current Portfolio/ — archived ones only appear on /archive.
+const projects = await getProjects();
 ---
 
 <BaseLayout

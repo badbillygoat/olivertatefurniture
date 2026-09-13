@@ -7,7 +7,6 @@ coverAlt: Carved maple side table with cantilevered tabletop
 category: Tables
 featured: false
 available: false
-archived: N
 materials:
   - Curly Maple
   - Birdseye Maple

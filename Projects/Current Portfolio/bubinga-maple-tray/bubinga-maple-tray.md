@@ -7,7 +7,6 @@ coverAlt: Bubinga and maple charcuterie board with brass hardware
 category: Kitchen, Decor
 featured: false
 available: false
-archived: N
 materials:
   - Bubinga
   - Maple

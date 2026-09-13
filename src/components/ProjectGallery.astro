@@ -1,11 +1,10 @@
 ---
 // Project grid + category filter + modal lightbox. Shared by
 // /portfolio (current pieces only) and /archive (every piece).
-import type { ImageMetadata } from 'astro';
-import type { CollectionEntry } from 'astro:content';
+import { getProjectImages, isArchived, type Project } from '../lib/projects';
 
 interface Props {
-  projects: CollectionEntry<'projects'>[];
+  projects: Project[];
   heading: string;
   intro: string;
   /** When true: cards for archived pieces get an "Archived" tag */
@@ -22,25 +21,6 @@ const projects = [...Astro.props.projects].sort((a, b) => {
   return b.data.date.getTime() - a.data.date.getTime();
 });
 
-const imageModules = import.meta.glob<{ default: ImageMetadata }>(
-  '/src/assets/images/**/*.{jpg,jpeg,png,webp,avif,gif}',
-  { eager: true }
-);
-
-function getCoverImage(slug: string): ImageMetadata | null {
-  const entries = Object.entries(imageModules)
-    .filter(([path]) => path.startsWith(`/src/assets/images/${slug}/`))
-    .sort(([a], [b]) => a.localeCompare(b));
-  return entries[0]?.[1]?.default ?? null;
-}
-
-function getProjectImages(slug: string): string[] {
-  return Object.entries(imageModules)
-    .filter(([path]) => path.startsWith(`/src/assets/images/${slug}/`))
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([, mod]) => mod.default.src);
-}
-
 // Parse comma-separated categories from each project
 function parseCats(raw: string): string[] {
   return raw.split(',').map(c => c.trim()).filter(Boolean);
@@ -55,7 +35,7 @@ const categories = [
 // Build project data for modal
 const projectData = Object.fromEntries(
   projects.map((p) => [
-    p.slug,
+    p.id,
     {
       title:       p.data.title,
       description: p.data.description,
@@ -65,7 +45,7 @@ const projectData = Object.fromEntries(
       dimensions:  p.data.dimensions ?? '',
       duration:    p.data.duration ?? '',
       available:   p.data.available,
-      images:      getProjectImages(p.slug),
+      images:      getProjectImages(p).map((img) => img.src),
     },
   ])
 );
@@ -100,11 +80,11 @@ const projectData = Object.fromEntries(
       <!-- Grid -->
       <ul class="project-grid" role="list">
         {projects.map((project) => (
-          <li class="project-card" data-categories={JSON.stringify(parseCats(project.data.category))} data-slug={project.slug}>
-            <a href={`/portfolio/${project.slug}`} class="card-link">
+          <li class="project-card" data-categories={JSON.stringify(parseCats(project.data.category))} data-slug={project.id}>
+            <a href={`/portfolio/${project.id}`} class="card-link">
               <div class="card-image-wrap">
                 {(() => {
-                  const img = getCoverImage(project.slug);
+                  const img = getProjectImages(project)[0];
                   return img
                     ? <img src={img.src} alt={project.data.coverAlt ?? project.data.title} loading="lazy" decoding="async" class="card-image" />
                     : <div class="card-image card-no-image" aria-hidden="true" />;
@@ -112,7 +92,7 @@ const projectData = Object.fromEntries(
                 {project.data.featured && (
                   <span class="card-badge">Featured</span>
                 )}
-                {showArchivedTag && project.data.archived && (
+                {showArchivedTag && isArchived(project) && (
                   <span class="card-badge card-badge--archived">Archived</span>
                 )}
               </div>

@@ -1,11 +1,12 @@
 ---
 // Unlinked archive page — reachable only by typing /archive. Shows every
-// project, including ones marked "archived: Y". Hidden from search engines.
-import { getCollection } from 'astro:content';
+// project: Projects/Current Portfolio/ and Projects/Archive/. Hidden from
+// search engines.
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ProjectGallery from '../components/ProjectGallery.astro';
+import { getProjects } from '../lib/projects';
 
-const projects = await getCollection('projects');
+const projects = await getProjects({ includeArchived: true });
 ---
 
 <BaseLayout

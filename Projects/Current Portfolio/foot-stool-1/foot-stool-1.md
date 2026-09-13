@@ -7,7 +7,6 @@ coverAlt: Foot stool with bright red base and maple top with wedged through-teno
 category: Kitchen
 featured: false
 available: false
-archived: N
 materials:
   - Maple
   - Walnut  
