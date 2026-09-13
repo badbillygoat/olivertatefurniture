@@ -1,7 +1,7 @@
 ---
 title: Whiskey Serving Tray
 description: Whiskey serving tray with six glencairn holders. Designed and made for a client in Nashville, Tennessee.
-date: 2020-13-7
+date: 2020-07-13
 coverAlt: Whiskey serving tray with six glencairn holders, stainless steel handlebars, and a minimalist hardwood design incorporating black walnut, curly maple, and african mahogany.
 #category ideas: Tables, Seating, Storage, Decor, Kitchen, Other
 category: Kitchen, Decor

@@ -1,7 +1,7 @@
 ---
 title: Slice of Life Coasters
 description: Slice of Life Wood and Epoxy Coasters, Set of 4, Cherry and Blue Resin Coasters, Clear Epoxy and Wood Drink Holders, Live Edge Coasters.
-date: 2020-28-7
+date: 2020-07-28
 coverAlt: Slice of Life Wood and Epoxy Coasters, Set of 4, Cherry and Blue Resin Coasters
 #category ideas: Tables, Seating, Storage, Decor, Kitchen, Other
 category: Kitchen, Decor

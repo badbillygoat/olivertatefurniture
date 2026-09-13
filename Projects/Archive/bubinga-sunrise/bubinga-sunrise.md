@@ -1,7 +1,7 @@
 ---
 title: Bubinga Sunrise Serving Board
 description: Stunning Golden Sunset Serving Tray, Epoxy Charcuterie Board, Exotic Bubinga Wood and Resin Cheese Board, Large Serving Tray with Handles. Designed and made for a client in Salt Lake City, Utah
-date: 2020-12-7
+date: 2020-07-12
 coverAlt: tunning Golden Sunset Serving Tray, Epoxy Charcuterie Board, Exotic Bubinga Wood and Resin Cheese Board, Large Serving Tray with Handles.
 #category ideas: Tables, Seating, Storage, Decor, Kitchen, Other
 category: Kitchen, Decor

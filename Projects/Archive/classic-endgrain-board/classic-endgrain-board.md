@@ -1,7 +1,7 @@
 ---
 title: Classic Endgrain Cutting Board
 description: Designed and made for a client in Salt Lake City, Utah.
-date: 2020-1-8
+date: 2020-08-01
 coverAlt: Designed and made for a client in Salt Lake City, Utah.
 #category ideas: Tables, Seating, Storage, Decor, Kitchen, Other
 category: Kitchen, Decor
