@@ -8,11 +8,10 @@ category: Kitchen, Decor
 featured: false
 available: false
 materials:
-  - Bubinga
-  - American Walnut
-  - Resin
-  - Brushed Nickle
-  - Mineral Oil Finish
+  - Padauk
+  - Ash
+  - Canarywood
+  - Mineral Oil
 dimensions: 18.75" × 16.75" × 1.75"
 heroImage: spalted-maple-charuterie-board-2.jpg
 heroSide: minor
