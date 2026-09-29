@@ -106,6 +106,9 @@ function buildZipper(cfg: ZipCfg) {
   return {
     leftPoly, rightPoly, leftTrackW,
     dLeft: svgPath(lCtrl), dRight: svgPath(rCtrl),
+    // rCtrl is also handed to the client script, which uses it to work out
+    // where the right edge sits at header height (see the hamburger note below).
+    rCtrl,
     seam: { x1: cfg.pull[0], y1: cfg.pull[1], x2: seamEnd[0], y2: seamEnd[1] },
     pullX: cfg.pull[0], pullY: cfg.pull[1], tiltDeg: cfg.tiltDeg,
   };
@@ -140,7 +143,7 @@ const year = new Date().getFullYear();
   <div class="zipper-panel zipper-panel--left" style={`clip-path: polygon(${zipD.leftPoly})`} aria-hidden="true">
     <div class="panel-track">
       {leftImages.map(({ img, alt, slug }) => (
-        <a href={`/portfolio#${slug}`} class="panel-link" tabindex="-1">
+        <a href={`/portfolio/${slug}`} data-slug={slug} class="panel-link" tabindex="-1">
           <Image
             src={img}
             alt={alt}
@@ -153,7 +156,7 @@ const year = new Date().getFullYear();
         </a>
       ))}
       {leftImages.map(({ img, slug }) => (
-        <a href={`/portfolio#${slug}`} class="panel-link" tabindex="-1">
+        <a href={`/portfolio/${slug}`} data-slug={slug} class="panel-link" tabindex="-1">
           <Image src={img} alt="" class="panel-img" widths={[800, 1200]} sizes="75vw" loading="eager" decoding="async" />
         </a>
       ))}
@@ -164,7 +167,7 @@ const year = new Date().getFullYear();
   <div class="zipper-panel zipper-panel--right" style={`clip-path: polygon(${zipD.rightPoly})`} aria-hidden="true">
     <div class="panel-track panel-track--right">
       {rightImages.map(({ img, alt, slug }) => (
-        <a href={`/portfolio#${slug}`} class="panel-link" tabindex="-1">
+        <a href={`/portfolio/${slug}`} data-slug={slug} class="panel-link" tabindex="-1">
           <Image
             src={img}
             alt={alt}
@@ -177,7 +180,7 @@ const year = new Date().getFullYear();
         </a>
       ))}
       {rightImages.map(({ img, slug }) => (
-        <a href={`/portfolio#${slug}`} class="panel-link" tabindex="-1">
+        <a href={`/portfolio/${slug}`} data-slug={slug} class="panel-link" tabindex="-1">
           <Image src={img} alt="" class="panel-img" widths={[800, 1200]} sizes="50vw" loading="eager" decoding="async" />
         </a>
       ))}
@@ -220,7 +223,9 @@ const year = new Date().getFullYear();
 </section>
 
 <!-- Swap the whole zipper (clip, edges, seam, pull) between the desktop and the
-     wider mobile config. Runs immediately to avoid a flash. -->
+     wider mobile config. Runs immediately to avoid a flash. Also parks the
+     mobile hamburger inside the cream gap and points the photo links at the
+     right place for the current screen width. -->
 <script define:vars={{ zipD, zipM }}>
 (function () {
   const hero  = document.querySelector('.hero-zipper');
@@ -229,10 +234,42 @@ const year = new Date().getFullYear();
   const edgeL = document.getElementById('zip-edge-left');
   const edgeR = document.getElementById('zip-edge-right');
   const seam  = document.getElementById('zip-seam');
+  const links = document.querySelectorAll('.panel-link');
   if (!hero || !lp || !rp) return;
+
+  // Where a zipper edge sits (x, in % of width) at a given height (y, in % of
+  // height). Walks the same cubic bezier the clip-path is built from.
+  function edgeXAtY(c, y) {
+    for (let i = 1; i <= 200; i++) {
+      const t = i / 200, mt = 1 - t;
+      const py = mt**3*c[0][1] + 3*mt**2*t*c[1][1] + 3*mt*t**2*c[2][1] + t**3*c[3][1];
+      if (py >= y) {
+        return mt**3*c[0][0] + 3*mt**2*t*c[1][0] + 3*mt*t**2*c[2][0] + t**3*c[3][0];
+      }
+    }
+    return c[3][0];
+  }
 
   function apply() {
     const z = window.innerWidth <= 640 ? zipM : zipD;
+
+    // Mobile hamburger: keep it in the open cream gap rather than over the
+    // photos in the top-right panel. Measured at the BOTTOM of the button
+    // (56px down), the point of it closest to the curve. Header.astro reads
+    // this as a distance in from the right edge of the screen.
+    const heroH = hero.clientHeight || window.innerHeight;
+    const edgeX = edgeXAtY(z.rCtrl, (56 / heroH) * 100);
+    const inset = ((100 - edgeX) / 100) * window.innerWidth + 10;
+    document.documentElement.style.setProperty('--hero-menu-right', inset.toFixed(1) + 'px');
+
+    // Photo links: phones/tablets go straight to the piece's own page; wider
+    // screens go to /portfolio#slug, which opens the pop-up there. The markup
+    // ships with the project-page link, so it still works without JavaScript.
+    const popupWidth = window.innerWidth > 900;
+    links.forEach((a) => {
+      const slug = a.dataset.slug;
+      if (slug) a.setAttribute('href', popupWidth ? '/portfolio#' + slug : '/portfolio/' + slug);
+    });
     lp.style.clipPath = `polygon(${z.leftPoly})`;
     rp.style.clipPath = `polygon(${z.rightPoly})`;
     if (edgeL) edgeL.setAttribute('d', z.dLeft);

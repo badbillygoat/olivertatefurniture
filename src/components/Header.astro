@@ -209,6 +209,7 @@ const currentPath = Astro.url.pathname.replace(/\/$/, '') || '/';
   border: none;
   cursor: pointer;
   padding: var(--space-2);
+  transition: margin-right var(--transition-base);
 }
 
 .hamburger span {
@@ -271,6 +272,15 @@ const currentPath = Astro.url.pathname.replace(/\/$/, '') || '/';
   .hamburger   { display: flex; }
   /* Sticky on inner pages; fixed on hero page */
   .site-header:not(.is-transparent) { position: sticky; }
+
+  /* Home page hero: sit in the open cream gap of the zipper instead of over
+     the photos in the top-right panel. --hero-menu-right is the distance in
+     from the right edge of the screen, set by the script in index.astro; the
+     fallback covers the moment before that runs. Once the page is scrolled
+     the header turns solid and the button returns to the container edge. */
+  .site-header.is-transparent:not(.is-scrolled) .hamburger {
+    margin-right: max(0px, calc(var(--hero-menu-right, 16vw) - var(--space-6)));
+  }
 }
 </style>
 
