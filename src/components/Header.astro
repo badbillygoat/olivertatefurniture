@@ -278,8 +278,19 @@ const currentPath = Astro.url.pathname.replace(/\/$/, '') || '/';
      from the right edge of the screen, set by the script in index.astro; the
      fallback covers the moment before that runs. Once the page is scrolled
      the header turns solid and the button returns to the container edge. */
-  .site-header.is-transparent:not(.is-scrolled) .hamburger {
+  /* Closed menu over the hero: park the button in the cream gap. Once the
+     drawer opens the bar turns solid, so there are no photos left to avoid and
+     the button glides back to the container edge, matching every other page. */
+  .site-header.is-transparent:not(.is-scrolled):not(.is-menu-open) .hamburger {
     margin-right: max(0px, calc(var(--hero-menu-right, 16vw) - var(--space-6)));
+  }
+
+  /* Menu open on the hero page: fade in the solid bar (same as the scrolled
+     state) so the drawer hangs off a real header instead of floating over the
+     photos with a transparent gap above it. */
+  .site-header.is-transparent.is-menu-open {
+    background-color: var(--color-bg);
+    border-bottom: 1px solid var(--color-accent);
   }
 }
 </style>
@@ -305,6 +316,9 @@ if (hamburger && mobileMenu) {
     const isOpen = hamburger.getAttribute('aria-expanded') === 'true';
     hamburger.setAttribute('aria-expanded', String(!isOpen));
     mobileMenu.hidden = isOpen;
+    // On the hero page the header is transparent; while the menu is open it
+    // turns solid so the drawer has a bar to hang off (see is-menu-open).
+    header?.classList.toggle('is-menu-open', !isOpen);
     hamburger.setAttribute(
       'aria-label',
       isOpen ? 'Open navigation menu' : 'Close navigation menu'
@@ -318,6 +332,7 @@ if (hamburger && mobileMenu) {
     ) {
       hamburger.setAttribute('aria-expanded', 'false');
       mobileMenu.hidden = true;
+      header?.classList.remove('is-menu-open');
       hamburger.setAttribute('aria-label', 'Open navigation menu');
     }
   });

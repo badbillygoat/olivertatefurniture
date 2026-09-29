@@ -41,7 +41,7 @@ run `npx astro check` separately when you've touched component scripts.
 |---|---|
 | `src/styles/global.css` | The entire design system: CSS custom properties, reset, typography, buttons, `.section`/`.container` utilities. Start here before writing new component styles. |
 | `src/layouts/BaseLayout.astro` | Root `<html>` shell — head/meta/OG tags, Google Analytics, Header + Footer, `heroLayout`/`hideFooter`/`rawTitle`/`noindex` props. |
-| `src/components/Header.astro` | Sticky nav. Has a transparent/overlay mode (`transparent` prop) used only on the homepage hero, with scroll-triggered solid background. |
+| `src/components/Header.astro` | Sticky nav. Has a transparent/overlay mode (`transparent` prop) used only on the homepage hero, with scroll-triggered solid background. Phone-only details for that mode: the hamburger sits in the hero's cream gap via `--hero-menu-right` (set by index.astro), and opening the drawer adds `is-menu-open`, which fades in the solid bar (so the drawer hangs off a real header instead of floating over the photos) and returns the button to the container edge. |
 | `src/components/Footer.astro` | Dark footer, nav links. |
 | `Projects/Current Portfolio/<slug>/` | One folder per live portfolio piece: its `.md` file + all its photos. Shown on the homepage, `/portfolio`, and `/archive`. |
 | `Projects/Archive/<slug>/` | Same layout, for archived pieces — shown only on `/archive`. **Folder location is the only archive switch** (there is no `archived` frontmatter field). |
